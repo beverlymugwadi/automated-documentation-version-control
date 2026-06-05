@@ -33,7 +33,7 @@ ADGVC is a full-stack web application that solves a critical problem in software
 | Authentication | JWT (jsonwebtoken, bcryptjs) |
 | Export | pdfkit, markdown (native) |
 | Testing | Jest, Postman |
-| Hosting | Render / Railway |
+| Hosting | Railway/Render |
 
 ---
 
@@ -44,7 +44,7 @@ adgvc/
 ├── client/                   # React frontend
 │   ├── public/
 │   └── src/
-│       ├── components/
+│       ├── pages/
 │       │   ├── Auth/
 │       │   │   ├── Register.jsx
 │       │   │   └── Login.jsx
@@ -131,11 +131,6 @@ npm start
 
 The frontend runs on `http://localhost:3000`.
 
-
-```env
-MONGO_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/adgvc
-```
-
 ---
 
 ## Database Schema
@@ -179,9 +174,9 @@ MONGO_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/adgvc
 
 ## Designs
 
-Figma mockups: [View Figma Designs](https://www.figma.com/design/i98pDnxfdBc8dEdRXKrzb6)
+Figma designs: (https://www.figma.com/design/i98pDnxfdBc8dEdRXKrzb6/ADGVC-%E2%80%94-UI-Designs?node-id=0-1&m=dev&t=aGCFG9AzXIMVxWHY-1)
 
-Screenshots of app interfaces are included in the `/designs` folder of this repository.
+Screenshots of app interfaces are included in the `/screenshots` folder of this repository.
 
 ---
 
@@ -189,10 +184,10 @@ Screenshots of app interfaces are included in the `/designs` folder of this repo
 
 The application is deployed using free-tier cloud platforms:
 
-- **Backend (Node.js/Express):** Atlas
-- **Frontend (React):** 
+- **Backend (Node.js/Express):** Render
+- **Frontend (React):** Vercel
 - **Database:** MongoDB Atlas 
-- **Environment variables** 
+- **Environment variables** environment configuration
 
 **Production URLs** 
 
@@ -209,7 +204,7 @@ npm test
 
 ## Video Demo
 
-[Watch Demo](https://YOUR-VIDEO-LINK) *(replace with your recorded demo link)*
+[Watch Demo](https://youtu.be/1XeP14HIf-w) 
 
 ---
 
