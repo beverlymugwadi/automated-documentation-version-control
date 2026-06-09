@@ -3,6 +3,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const authRoutes = require("./routes/auth");
+const projectRoutes = require("./routes/projects");
 
 const app = express();
 
@@ -18,6 +19,7 @@ mongoose
 
 // Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/projects", projectRoutes);
 
 // Health check
 app.get("/", (req, res) => res.json({ message: "ADGVC API is running" }));
