@@ -16,6 +16,7 @@ const {
 } = require('../controllers/versionController');
 const protect = require('../middleware/auth');
 const validate = require('../middleware/validate');
+const { exportDocument } = require('../controllers/docController');
 
 const router = Router();
 
@@ -32,5 +33,6 @@ router.get('/:docId/versions', getVersions);
 router.get('/:docId/versions/:versionId', getVersion);
 router.get('/:docId/diff', getDiff);
 router.post('/:docId/rollback/:versionId', rollback);
+router.get('/:docId/export', exportDocument);
 
 module.exports = router;

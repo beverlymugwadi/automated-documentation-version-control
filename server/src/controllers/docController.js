@@ -120,4 +120,18 @@ const updateDoc = asyncHandler(async (req, res) => {
   res.json({ success: true, doc });
 });
 
-module.exports = { previewDoc, createDoc, getDocs, getDoc, updateDoc };
+const { exportDoc } = require('../services/exporters');
+
+const exportDocument = asyncHandler(async (req, res) => {
+  const { format = 'markdown' } = req.query;
+
+  const doc = await Documentation.findById(req.params.docId);
+  if (!doc) throw new ApiError(404, 'Documentation not found.');
+  if (doc.userId.toString() !== req.user._id.toString()) {
+    throw new ApiError(403, 'Not authorised.');
+  }
+
+  await exportDoc(format, doc, res);
+});
+
+module.exports = { previewDoc, createDoc, getDocs, getDoc, updateDoc, exportDocument };
