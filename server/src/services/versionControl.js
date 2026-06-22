@@ -34,7 +34,7 @@ async function commitVersion(docId, content, message) {
   const dir = repoPath(docId);
   const git = await initRepo(docId);
   await fs.writeFile(path.join(dir, DOC_FILENAME), content, 'utf8');
-  await git.add(DOC_FILENAME);
+  await git.raw(['add', '-f', DOC_FILENAME]);
   const result = await git.commit(message || 'Update documentation');
   const full = await git.revparse(['HEAD']);
   return {
