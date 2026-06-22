@@ -572,3 +572,62 @@ a:hover {
   text-align: center;
   padding: 48px 24px;
 }
+
+/* Markdown body */
+.markdown-body h1 { font-size: 26px; margin: 24px 0 12px; }
+.markdown-body h2 { font-size: 20px; margin: 20px 0 10px; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+.markdown-body h3 { font-size: 17px; margin: 16px 0 8px; }
+.markdown-body h4 { font-size: 15px; margin: 12px 0 6px; }
+.markdown-body p  { margin: 6px 0; line-height: 1.7; }
+.markdown-body li { margin: 4px 0 4px 24px; line-height: 1.7; }
+.markdown-body blockquote {
+  border-left: 3px solid var(--primary);
+  padding: 4px 12px;
+  color: var(--text-muted);
+  margin: 8px 0;
+  font-style: italic;
+}
+.markdown-body hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 16px 0;
+}
+
+.inline-code {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 1px 5px;
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+}
+
+/* Code block */
+.code-block {
+  background: #1e2130;
+  border-radius: var(--radius);
+  margin: 12px 0;
+  overflow-x: auto;
+}
+
+.code-block pre {
+  margin: 0;
+  padding: 16px;
+}
+
+.code-block code {
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+/* Prism token colours */
+.token.keyword { color: #c792ea; }
+.token.string  { color: #c3e88d; }
+.token.comment { color: #546e7a; font-style: italic; }
+.token.function { color: #82aaff; }
+.token.number  { color: #f78c6c; }
+.token.operator { color: #89ddff; }
+.token.punctuation { color: #89ddff; }
+.token.class-name { color: #ffcb6b; }
+.token.boolean { color: #ff5572; }
