@@ -72,7 +72,7 @@ export default function Generate() {
           <button
             className="btn btn-secondary"
             onClick={handlePreview}
-            disabled={loading}
+            disabled={loading || !form.notes.trim()}
           >
             <Eye size={16} />
             {loading ? 'Generating...' : 'Preview'}
@@ -80,7 +80,7 @@ export default function Generate() {
           <button
             className="btn btn-primary"
             onClick={handleSave}
-            disabled={saving}
+            disabled={saving || !form.notes.trim()}
           >
             <Save size={16} />
             {saving ? 'Saving...' : 'Save Documentation'}

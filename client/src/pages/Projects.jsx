@@ -17,6 +17,7 @@ export default function Projects() {
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ projectName: '', description: '' });
   const [creating, setCreating] = useState(false);
+  const [deletingId, setDeletingId] = useState('');
 
   useEffect(() => {
     fetchProjects();
@@ -52,12 +53,15 @@ export default function Projects() {
   async function handleDelete(e, projectId) {
     e.stopPropagation();
     if (!confirm('Delete this project?')) return;
+    setDeletingId(projectId);
     try {
       await api.delete(`/projects/${projectId}`);
       setProjects(projects.filter((p) => p.projectId !== projectId));
       toast.success('Project deleted.');
     } catch {
       toast.error('Failed to delete project.');
+    } finally {
+      setDeletingId('');
     }
   }
 
@@ -89,6 +93,7 @@ export default function Projects() {
                 <button
                   className="icon-btn"
                   onClick={(e) => handleDelete(e, project.projectId)}
+                  disabled={deletingId === project.projectId}
                   title="Delete project"
                 >
                   <Trash2 size={16} />

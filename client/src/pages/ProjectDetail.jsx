@@ -28,8 +28,8 @@ export default function ProjectDetail() {
       ]);
       setProject(projectRes.data.project);
       setDocs(docsRes.data.docs);
-    } catch {
-      setError('Failed to load project.');
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to load project.');
     } finally {
       setLoading(false);
     }
