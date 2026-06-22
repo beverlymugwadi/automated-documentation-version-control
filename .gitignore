@@ -1,18 +1,32 @@
 # Dependencies
 node_modules/
 
-# Environment files - contain secret keys, never commit these
-.env
-
-# Git repos created by our version control service
-.doc-repos/
-
-# Production build files
+# Build output
 dist/
+build/
+client/dist/
+server/dist/
 
-# Mac system files
-.DS_Store
+# Environment
+.env
+.env.local
+.env.*.local
 
-# Log files
+# Logs
 *.log
 npm-debug.log*
+yarn-error.log*
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+
+# Per-document git working trees created by the version service
+server/.docrepos/
+
+# Misc
+coverage/
+*.tsbuildinfo
