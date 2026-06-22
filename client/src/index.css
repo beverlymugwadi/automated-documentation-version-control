@@ -786,3 +786,63 @@ a:hover {
   color: var(--text-muted);
   font-size: 14px;
 }
+
+/* Compare page */
+.compare-controls {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+}
+
+.compare-selects {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+  flex: 1;
+}
+
+.compare-selects .field {
+  flex: 1;
+  margin-bottom: 0;
+}
+
+.compare-arrow {
+  font-size: 20px;
+  color: var(--text-muted);
+  padding-bottom: 10px;
+  flex-shrink: 0;
+}
+
+.compare-placeholder {
+  text-align: center;
+  padding: 64px;
+  color: var(--text-muted);
+  font-size: 14px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.compare-result {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.compare-summary {
+  font-size: 14px;
+  color: var(--text-muted);
+}
+
+.compare-summary code {
+  background: var(--bg-secondary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  color: var(--primary);
+}
