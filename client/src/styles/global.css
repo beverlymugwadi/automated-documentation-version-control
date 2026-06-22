@@ -1,0 +1,166 @@
+:root {
+  --font-display: 'Geist', 'Satoshi', system-ui, -apple-system, sans-serif;
+  --font-ui: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.875rem;
+  --text-md: 0.9375rem;
+  --text-lg: 1.0625rem;
+  --text-xl: 1.3125rem;
+  --text-2xl: 1.625rem;
+  --text-3xl: 2.125rem;
+  --text-4xl: 2.75rem;
+
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --sp-7: 48px;
+  --sp-8: 64px;
+  --sp-9: 96px;
+
+  --radius-input: 6px;
+  --radius: 8px;
+  --radius-card: 12px;
+
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
+  --t-fast: 120ms var(--ease);
+  --t: 150ms var(--ease);
+
+  --signal: #5b8def;
+  --signal-2: #7c5cff;
+  --signal-press: #4a7ad8;
+  --signal-soft: rgba(91, 141, 239, 0.14);
+  --signal-ring: rgba(91, 141, 239, 0.45);
+  --on-signal: #ffffff;
+
+  --add: #3fb950;
+  --remove: #f85149;
+  --amber: #d29922;
+  --add-soft: rgba(63, 185, 80, 0.14);
+  --remove-soft: rgba(248, 81, 73, 0.14);
+  --amber-soft: rgba(210, 153, 34, 0.14);
+
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.25);
+  --shadow-2: 0 6px 24px rgba(0, 0, 0, 0.35);
+  --shadow-pop: 0 16px 48px rgba(0, 0, 0, 0.45);
+
+  --header-h: 56px;
+}
+
+:root,
+[data-theme='dark'] {
+  --ink: #0b0e14;
+  --surface: #131720;
+  --surface-2: #1b2230;
+  --surface-3: #222b3b;
+  --line: #262e3d;
+  --line-strong: #344056;
+  --text: #e6eaf2;
+  --muted: #8a93a6;
+  --faint: #5b657a;
+  color-scheme: dark;
+}
+
+[data-theme='light'] {
+  --ink: #f6f7f9;
+  --surface: #ffffff;
+  --surface-2: #f1f3f7;
+  --surface-3: #e7eaf1;
+  --line: #dde2ec;
+  --line-strong: #c5cdda;
+  --text: #0b0e14;
+  --muted: #5a6373;
+  --faint: #8a93a6;
+  --signal-soft: rgba(91, 141, 239, 0.12);
+  --shadow-1: 0 1px 2px rgba(11, 14, 20, 0.06);
+  --shadow-2: 0 6px 24px rgba(11, 14, 20, 0.1);
+  --shadow-pop: 0 16px 48px rgba(11, 14, 20, 0.16);
+  color-scheme: light;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root { height: 100%; }
+
+body {
+  font-family: var(--font-ui);
+  font-size: var(--text-base);
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  transition: background var(--t), color var(--t);
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+}
+
+code, kbd, pre, samp, .mono {
+  font-family: var(--font-mono);
+  font-feature-settings: 'liga' 0;
+}
+
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; }
+::selection { background: var(--signal-soft); }
+:focus-visible { outline: none; }
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
+}
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb {
+  background: var(--line-strong);
+  border-radius: 8px;
+  border: 2px solid var(--ink);
+}
+
+.mono { font-family: var(--font-mono); }
+.muted { color: var(--muted); }
+.faint { color: var(--faint); }
+.display { font-family: var(--font-display); }
+.row { display: flex; align-items: center; gap: var(--sp-3); }
+.row--between { justify-content: space-between; }
+.col { display: flex; flex-direction: column; }
+.spacer { flex: 1 1 auto; }
+.stack-2 > * + * { margin-top: var(--sp-2); }
+.stack-3 > * + * { margin-top: var(--sp-3); }
+.stack-4 > * + * { margin-top: var(--sp-4); }
+.stack-5 > * + * { margin-top: var(--sp-5); }
+.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tag-mono { font-family: var(--font-mono); font-size: var(--text-xs); color: var(--muted); }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.spin { animation: spin 0.7s linear infinite; }
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.fade-up { animation: fade-up 200ms var(--ease); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
