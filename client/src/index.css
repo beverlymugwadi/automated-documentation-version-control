@@ -463,3 +463,66 @@ a:hover {
   font-size: 12px;
   color: var(--text-muted);
 }
+
+/* Page header left */
+.page-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Project description */
+.project-desc {
+  color: var(--text-muted);
+  margin-bottom: 28px;
+  font-size: 15px;
+}
+
+/* Section title */
+.section-title {
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+/* Doc list */
+.doc-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.doc-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  text-decoration: none;
+  color: var(--text);
+  transition: box-shadow 0.15s;
+}
+
+.doc-item:hover {
+  box-shadow: var(--shadow-md);
+  text-decoration: none;
+}
+
+.doc-item-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--text);
+}
+
+.doc-item-title {
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+
+.doc-item-meta {
+  font-size: 13px;
+  color: var(--text-muted);
+}
