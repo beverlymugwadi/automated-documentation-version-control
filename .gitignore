@@ -1,0 +1,18 @@
+# Dependencies
+node_modules/
+
+# Environment files - contain secret keys, never commit these
+.env
+
+# Git repos created by our version control service
+.doc-repos/
+
+# Production build files
+dist/
+
+# Mac system files
+.DS_Store
+
+# Log files
+*.log
+npm-debug.log*
