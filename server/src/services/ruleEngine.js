@@ -95,7 +95,7 @@ function processNotes(notes) {
   for (const line of lines) {
     const rule = categorizeLine(line);
     if (!sectionMap[rule.id]) {
-      sectionMap[rule.id] = { title: rule.title, order: rule.order, lines: [] };
+      sectionMap[rule.id] = { id: rule.id, title: rule.title, order: rule.order, lines: [] };
     }
     sectionMap[rule.id].lines.push(line);
   }
