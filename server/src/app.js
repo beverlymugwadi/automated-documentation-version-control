@@ -5,6 +5,7 @@ const cors = require('cors');
 const morgan = require('morgan');
 const env = require('./config/env');
 const errorHandler = require('./middleware/errorHandler');
+const routes = require('./routes');
 
 const app = express();
 
@@ -16,7 +17,10 @@ app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok' });
 });
 
-// Must be last — catches all errors passed via next(err)
+// All API routes
+app.use('/api', routes);
+
+// Must be last
 app.use(errorHandler);
 
 module.exports = app;
