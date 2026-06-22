@@ -725,3 +725,64 @@ a:hover {
   color: var(--text-muted);
   font-family: 'Courier New', monospace;
 }
+
+/* Diff view */
+.diff-view {
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.diff-hunk {
+  margin-bottom: 2px;
+}
+
+.diff-hunk-header {
+  background: #1e2130;
+  color: #82aaff;
+  padding: 6px 16px;
+  font-size: 12px;
+}
+
+.diff-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 2px 16px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.diff-line--add {
+  background: rgba(56, 161, 105, 0.15);
+  color: #c3e88d;
+}
+
+.diff-line--remove {
+  background: rgba(229, 62, 62, 0.15);
+  color: #ff5572;
+}
+
+.diff-line--context {
+  color: var(--text-muted);
+}
+
+.diff-line-indicator {
+  flex-shrink: 0;
+  width: 12px;
+  font-weight: 700;
+}
+
+.diff-line-text {
+  flex: 1;
+}
+
+.diff-empty {
+  text-align: center;
+  padding: 48px;
+  color: var(--text-muted);
+  font-size: 14px;
+}
