@@ -526,3 +526,49 @@ a:hover {
   font-size: 13px;
   color: var(--text-muted);
 }
+
+/* Generate page */
+.header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.generate-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.generate-inputs {
+  display: flex;
+  flex-direction: column;
+}
+
+.code-textarea {
+  font-family: 'Courier New', monospace;
+  font-size: 13px;
+}
+
+.generate-preview {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 24px;
+  overflow-y: auto;
+  max-height: 80vh;
+}
+
+.markdown-preview {
+  white-space: pre-wrap;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--text);
+  font-family: 'Courier New', monospace;
+}
+
+.preview-empty {
+  color: var(--text-muted);
+  font-size: 14px;
+  text-align: center;
+  padding: 48px 24px;
+}
