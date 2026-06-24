@@ -25,6 +25,14 @@ export async function fetchMe(): Promise<SessionUser> {
   return data.user;
 }
 
+export async function deleteAccountRequest(): Promise<void> {
+  await api.delete('/auth/me');
+}
+
+export async function disconnectGithubRequest(): Promise<void> {
+  await api.delete('/auth/github');
+}
+
 export function githubAuthUrl(): string {
   const base = import.meta.env.VITE_API_URL ?? '/api';
   return `${base}/auth/github`;

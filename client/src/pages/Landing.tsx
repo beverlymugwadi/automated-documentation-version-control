@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Diamond, Github, ArrowRight, GitBranch, Sparkles, FolderGit2 } from 'lucide-react';
 import { Button } from '../components/ui';
@@ -6,7 +7,7 @@ import { PipelineConnector } from '../components/PipelineConnector';
 import { CommitRail } from '../components/CommitRail';
 import { DiffView } from '../components/DiffView';
 import { ThemeToggle } from '../components/ThemeToggle';
-import { githubAuthUrl } from '../lib/auth';
+import { GitHubConnectModal } from '../components/GitHubConnectModal';
 import type { Version, Diff } from '../lib/versions';
 
 const SAMPLE_NOTES = `Overview: formats prices and manages the cart.
@@ -43,6 +44,7 @@ const SAMPLE_DIFF: Diff = {
 
 export function Landing() {
   const navigate = useNavigate();
+  const [ghModal, setGhModal] = useState(false);
   const scrollTo = (id: string) => document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
 
   return (
@@ -54,7 +56,7 @@ export function Landing() {
         <div className="row" style={{ gap: 'var(--sp-2)' }}>
           <ThemeToggle />
           <Button size="sm" variant="ghost" onClick={() => navigate('/login')}>Sign in</Button>
-          <Button size="sm" variant="primary" leftIcon={<Github size={15} />} onClick={() => (window.location.href = githubAuthUrl())}>
+          <Button size="sm" variant="primary" leftIcon={<Github size={15} />} onClick={() => setGhModal(true)}>
             Continue with GitHub
           </Button>
         </div>
@@ -68,7 +70,7 @@ export function Landing() {
           like commits, with diffs, rollback and export.
         </p>
         <div className="hero__cta">
-          <Button variant="primary" leftIcon={<Github size={16} />} onClick={() => (window.location.href = githubAuthUrl())}>
+          <Button variant="primary" leftIcon={<Github size={16} />} onClick={() => setGhModal(true)}>
             Continue with GitHub
           </Button>
           <Button variant="secondary" rightIcon={<ArrowRight size={15} />} onClick={() => scrollTo('how')}>
@@ -126,6 +128,8 @@ export function Landing() {
           <span>Capstone · BSc Software Engineering · African Leadership University</span>
         </div>
       </footer>
+
+      <GitHubConnectModal open={ghModal} onClose={() => setGhModal(false)} />
     </div>
   );
 }

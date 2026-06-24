@@ -33,7 +33,7 @@ export function CommitRail({
                 <Badge tone={active ? 'signal' : 'neutral'} mono>v{v.versionNo}</Badge>
                 {v.commitHash && <span className="tag-mono">{v.commitHash.slice(0, 7)}</span>}
                 {v.externalCommit && (
-                  
+                  <a
                     href={v.externalCommit.url}
                     target="_blank"
                     rel="noreferrer"

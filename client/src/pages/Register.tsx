@@ -3,8 +3,9 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Github, Mail, Lock, User, AlertTriangle } from 'lucide-react';
 import { AuthLayout } from '../components/auth/AuthLayout';
 import { Button, Input, Divider } from '../components/ui';
+import { GitHubConnectModal } from '../components/GitHubConnectModal';
 import { useAuth } from '../lib/hooks/useAuth';
-import { githubAuthUrl, parseAuthError } from '../lib/auth';
+import { parseAuthError } from '../lib/auth';
 
 export function Register() {
   const { register } = useAuth();
@@ -15,6 +16,7 @@ export function Register() {
   const [fields, setFields] = useState<Record<string, string>>({});
   const [formError, setFormError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [ghModal, setGhModal] = useState(false);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -41,7 +43,7 @@ export function Register() {
         <h2 className="auth__title">Create your account</h2>
         <p className="auth__sub">Start turning notes and code into living docs.</p>
         <div className="stack-4" style={{ marginTop: 'var(--sp-6)' }}>
-          <Button variant="github" block leftIcon={<Github size={17} />} onClick={() => (window.location.href = githubAuthUrl())}>
+          <Button variant="github" block leftIcon={<Github size={17} />} onClick={() => setGhModal(true)}>
             Continue with GitHub
           </Button>
           <Divider>or</Divider>
@@ -57,6 +59,7 @@ export function Register() {
         </div>
         <p className="auth__switch">Already have an account? <Link to="/login">Sign in</Link></p>
       </div>
+      <GitHubConnectModal open={ghModal} onClose={() => setGhModal(false)} />
     </AuthLayout>
   );
 }

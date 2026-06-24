@@ -3,6 +3,8 @@ import { z } from 'zod';
 import { asyncHandler } from '../lib/asyncHandler';
 import { signToken, authCookieOptions, AUTH_COOKIE } from '../lib/jwt';
 import { registerUser, loginUser } from '../services/authService';
+import { userStore } from '../lib/userStore';
+import { dataStore } from '../lib/dataStore';
 import { HttpError } from '../middleware/errorHandler';
 
 /* ---- Validation schemas ---------------------------------- */
@@ -50,4 +52,21 @@ export const logout = asyncHandler(async (_req: Request, res: Response) => {
 export const me = asyncHandler(async (req: Request, res: Response) => {
   if (!req.user) throw new HttpError(401, 'Authentication required.');
   res.json({ user: req.user });
+});
+
+/** DELETE /api/auth/me — permanently removes the account and all owned data. */
+export const deleteAccount = asyncHandler(async (req: Request, res: Response) => {
+  const userId = req.user!.userId;
+
+  const projects = await dataStore.listProjects(userId);
+  const owned = projects.filter((p) => p.userId === userId);
+  const member = projects.filter((p) => p.userId !== userId);
+
+  await Promise.all(owned.map((p) => dataStore.deleteProject(p.projectId)));
+  await Promise.all(member.map((p) => dataStore.removeMember(p.projectId, userId)));
+
+  await userStore.deleteById(userId);
+
+  res.clearCookie(AUTH_COOKIE, { ...authCookieOptions(), maxAge: undefined });
+  res.json({ ok: true });
 });

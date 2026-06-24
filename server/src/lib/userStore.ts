@@ -1,7 +1,4 @@
-import bcrypt from 'bcryptjs';
-import { env } from '../config/env';
 import { User } from '../models/User';
-import { shortHash } from './crypto';
 
 export interface StoredUser {
   userId: string;
@@ -51,64 +48,12 @@ export interface UserStore {
   findByEmail(email: string): Promise<StoredUser | null>;
   findByLogin(login: string): Promise<StoredUser | null>;
   findById(id: string): Promise<StoredUser | null>;
+  findByGithubId(githubId: string): Promise<StoredUser | null>;
   create(input: CreateUserInput): Promise<StoredUser>;
   linkGithub(userId: string, link: GithubLink): Promise<StoredUser | null>;
+  unlinkGithub(userId: string): Promise<StoredUser | null>;
   getEncryptedGithubToken(userId: string): Promise<string | null>;
-}
-
-class MemoryUserStore implements UserStore {
-  private users: StoredUser[] = [];
-  private tokens = new Map<string, string>();
-
-  constructor() {
-    this.users.push({
-      userId: 'u_demo',
-      fullName: 'Ada Lovelace',
-      email: 'ada@adgvc.dev',
-      passwordHash: bcrypt.hashSync('password123', 10),
-      createdAt: new Date(),
-    });
-  }
-
-  async findByEmail(email: string): Promise<StoredUser | null> {
-    return this.users.find((u) => u.email === email.toLowerCase()) ?? null;
-  }
-
-  async findByLogin(login: string): Promise<StoredUser | null> {
-    return this.users.find(
-      (u) => u.githubLogin?.toLowerCase() === login.toLowerCase(),
-    ) ?? null;
-  }
-
-  async findById(id: string): Promise<StoredUser | null> {
-    return this.users.find((u) => u.userId === id) ?? null;
-  }
-
-  async create(input: CreateUserInput): Promise<StoredUser> {
-    const user: StoredUser = {
-      userId: `u_${shortHash(input.email + Date.now())}`,
-      fullName: input.fullName,
-      email: input.email.toLowerCase(),
-      passwordHash: input.passwordHash,
-      createdAt: new Date(),
-    };
-    this.users.push(user);
-    return user;
-  }
-
-  async linkGithub(userId: string, link: GithubLink): Promise<StoredUser | null> {
-    const user = this.users.find((u) => u.userId === userId);
-    if (!user) return null;
-    user.githubId = link.githubId;
-    user.githubLogin = link.githubLogin;
-    user.avatarUrl = link.avatarUrl ?? user.avatarUrl;
-    this.tokens.set(userId, link.encryptedToken);
-    return user;
-  }
-
-  async getEncryptedGithubToken(userId: string): Promise<string | null> {
-    return this.tokens.get(userId) ?? null;
-  }
+  deleteById(userId: string): Promise<void>;
 }
 
 class MongoUserStore implements UserStore {
@@ -119,6 +64,11 @@ class MongoUserStore implements UserStore {
 
   async findByLogin(login: string): Promise<StoredUser | null> {
     const doc = await User.findOne({ githubLogin: login });
+    return doc ? this.map(doc) : null;
+  }
+
+  async findByGithubId(githubId: string): Promise<StoredUser | null> {
+    const doc = await User.findOne({ githubId });
     return doc ? this.map(doc) : null;
   }
 
@@ -150,9 +100,22 @@ class MongoUserStore implements UserStore {
     return doc ? this.map(doc) : null;
   }
 
+  async unlinkGithub(userId: string): Promise<StoredUser | null> {
+    const doc = await User.findByIdAndUpdate(
+      userId,
+      { $unset: { githubId: 1, githubLogin: 1, githubAccessToken: 1, avatarUrl: 1 } },
+      { new: true },
+    );
+    return doc ? this.map(doc) : null;
+  }
+
   async getEncryptedGithubToken(userId: string): Promise<string | null> {
     const doc = await User.findById(userId).select('+githubAccessToken');
     return (doc?.githubAccessToken as string | undefined) ?? null;
+  }
+
+  async deleteById(userId: string): Promise<void> {
+    await User.findByIdAndDelete(userId);
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -170,6 +133,4 @@ class MongoUserStore implements UserStore {
   }
 }
 
-export const userStore: UserStore = env.mockMode
-  ? new MemoryUserStore()
-  : new MongoUserStore();
+export const userStore: UserStore = new MongoUserStore();

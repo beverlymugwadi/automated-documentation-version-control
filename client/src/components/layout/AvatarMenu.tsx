@@ -50,7 +50,7 @@ export function AvatarMenu() {
           <button className="menu__item" role="menuitem" onClick={() => { navigate('/dashboard'); setOpen(false); }}>
             <LayoutGrid size={15} /> Dashboard
           </button>
-          <button className="menu__item" role="menuitem" onClick={() => { navigate('/dashboard'); setOpen(false); }}>
+          <button className="menu__item" role="menuitem" onClick={() => { navigate('/account'); setOpen(false); }}>
             <UserIcon size={15} /> Account
           </button>
           <div className="menu__sep" />

@@ -4,8 +4,26 @@ import { asyncHandler } from '../lib/asyncHandler';
 import { dataStore, type Member } from '../lib/dataStore';
 import { userStore } from '../lib/userStore';
 import { removeDocRepo } from '../services/versionService';
-import { requireProjectAccess, requireProjectOwner, roleOf } from '../lib/access';
+import { requireProjectAccess, requireProjectOwner, roleOf, authorFromReq } from '../lib/access';
 import { HttpError } from '../middleware/errorHandler';
+
+const createProjectSchema = z.object({
+  projectName: z.string().trim().min(1, 'Project name is required').max(140),
+  description: z.string().trim().max(1000).default(''),
+  repoFullName: z.string().trim().optional(),
+});
+
+export const createProject = asyncHandler(async (req: Request, res: Response) => {
+  const { projectName, description, repoFullName } = req.body as z.infer<typeof createProjectSchema>;
+  const project = await dataStore.createProject({
+    userId: req.user!.userId,
+    projectName,
+    description,
+    repoFullName: repoFullName || undefined,
+    owner: authorFromReq(req),
+  });
+  res.status(201).json({ project });
+});
 
 export const listProjects = asyncHandler(async (req: Request, res: Response) => {
   const userId = req.user!.userId;

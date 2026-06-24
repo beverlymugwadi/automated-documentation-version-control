@@ -18,6 +18,13 @@ export class GithubScopeError extends Error {
   }
 }
 
+export class BranchProtectedError extends Error {
+  constructor() {
+    super('This branch is protected and requires a pull request. Commit to a new branch (e.g. docs/update) and open a PR on GitHub.');
+    this.name = 'BranchProtectedError';
+  }
+}
+
 async function gh<T>(token: string, path: string): Promise<T> {
   const res = await fetch(`${API}${path}`, {
     headers: {
@@ -191,6 +198,9 @@ export async function commitFile(
   if (res.status === 403 || res.status === 404) {
     throw new GithubScopeError();
   }
+  if (res.status === 409) {
+    throw new BranchProtectedError();
+  }
   if (!res.ok) {
     const body = await res.text().catch(() => '');
     throw new Error(`GitHub commit failed (${res.status}): ${body.slice(0, 200)}`);
@@ -244,12 +254,26 @@ export async function exchangeCodeForUser(code: string): Promise<{
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const profile = await gh<any>(accessToken, '/user');
+
+  // /user returns null when the user's email is set to private.
+  // Fall back to /user/emails which always returns verified addresses.
+  let email = (profile.email as string | null) ?? null;
+  if (!email) {
+    try {
+      const emails = await gh<Array<{ email: string; primary: boolean; verified: boolean }>>(
+        accessToken,
+        '/user/emails',
+      );
+      email = emails.find((e) => e.primary && e.verified)?.email ?? null;
+    } catch { /* scope may not include user:email — proceed without */ }
+  }
+
   return {
     accessToken,
     githubId: String(profile.id),
     login: profile.login,
     name: profile.name,
-    email: profile.email,
+    email,
     avatarUrl: profile.avatar_url,
   };
 }

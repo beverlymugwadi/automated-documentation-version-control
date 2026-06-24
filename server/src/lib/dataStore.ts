@@ -1,5 +1,3 @@
-import { env } from '../config/env';
-import { shortHash } from './crypto';
 import { Project } from '../models/Project';
 import { Documentation } from '../models/Documentation';
 import { DocVersion } from '../models/DocVersion';
@@ -140,176 +138,6 @@ function ownerMember(owner?: Author, userId?: string): Member {
   };
 }
 
-/* ---- In-memory store (MOCK_MODE) -------------------------- */
-class MemoryDataStore implements DataStore {
-  private projects = new Map<string, ProjectRec>();
-  private docs = new Map<string, DocRec>();
-  private versions = new Map<string, VersionRec[]>();
-  private notes = new Map<string, number>();
-  private files = new Map<string, number>();
-
-  async createProject(input: CreateProjectInput): Promise<ProjectRec> {
-    const id = `p_${shortHash(input.projectName + Math.random())}`;
-    const rec: ProjectRec = {
-      projectId: id,
-      userId: input.userId,
-      projectName: input.projectName,
-      description: input.description ?? '',
-      repoFullName: input.repoFullName,
-      members: [ownerMember(input.owner, input.userId)],
-      createdAt: now(),
-      updatedAt: now(),
-    };
-    this.projects.set(id, rec);
-    return rec;
-  }
-
-  async listProjects(userId: string): Promise<ProjectRec[]> {
-    return [...this.projects.values()]
-      .filter((p) => p.userId === userId || p.members.some((m) => m.userId === userId))
-      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
-  }
-
-  async getProject(projectId: string): Promise<ProjectRec | null> {
-    return this.projects.get(projectId) ?? null;
-  }
-
-  async getOrCreateDefaultProject(userId: string, owner?: Author): Promise<ProjectRec> {
-    const existing = [...this.projects.values()].find((p) => p.userId === userId);
-    return existing ?? this.createProject({ userId, projectName: 'My Documents', owner });
-  }
-
-  async deleteProject(projectId: string): Promise<DeleteSummary> {
-    const docs = [...this.docs.values()].filter((d) => d.projectId === projectId);
-    let versions = 0;
-    const docIds: string[] = [];
-    for (const d of docs) {
-      versions += (this.versions.get(d.docId) ?? []).length;
-      this.versions.delete(d.docId);
-      this.docs.delete(d.docId);
-      docIds.push(d.docId);
-    }
-    const summary: DeleteSummary = {
-      documents: docs.length,
-      versions,
-      notes: this.notes.get(projectId) ?? 0,
-      files: this.files.get(projectId) ?? 0,
-      docIds,
-    };
-    this.notes.delete(projectId);
-    this.files.delete(projectId);
-    this.projects.delete(projectId);
-    return summary;
-  }
-
-  async addMember(projectId: string, member: Member): Promise<ProjectRec | null> {
-    const p = this.projects.get(projectId);
-    if (!p) return null;
-    if (!p.members.some((m) => m.userId === member.userId)) p.members.push(member);
-    p.updatedAt = now();
-    return p;
-  }
-
-  async removeMember(projectId: string, userId: string): Promise<ProjectRec | null> {
-    const p = this.projects.get(projectId);
-    if (!p) return null;
-    p.members = p.members.filter((m) => m.userId !== userId || m.role === 'owner');
-    p.updatedAt = now();
-    return p;
-  }
-
-  async createDoc(input: CreateDocInput): Promise<DocRec> {
-    const id = `d_${shortHash(input.title + Math.random())}`;
-    const rec: DocRec = {
-      docId: id,
-      projectId: input.projectId,
-      userId: input.userId,
-      title: input.title,
-      content: input.content,
-      format: 'markdown',
-      currentVersion: 1,
-      sourceRepo: input.sourceRepo,
-      sourceBindings: input.sourceBindings ?? [],
-      generatedAt: now(),
-      createdAt: now(),
-      updatedAt: now(),
-    };
-    this.docs.set(id, rec);
-    this.versions.set(id, []);
-    const proj = this.projects.get(input.projectId);
-    if (proj) proj.updatedAt = now();
-    return rec;
-  }
-
-  async getDoc(docId: string): Promise<DocRec | null> {
-    return this.docs.get(docId) ?? null;
-  }
-
-  async listDocsByUser(userId: string): Promise<DocRec[]> {
-    const projectIds = new Set((await this.listProjects(userId)).map((p) => p.projectId));
-    return [...this.docs.values()]
-      .filter((d) => d.userId === userId || projectIds.has(d.projectId))
-      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
-  }
-
-  async listDocsByProject(projectId: string): Promise<DocRec[]> {
-    return [...this.docs.values()]
-      .filter((d) => d.projectId === projectId)
-      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
-  }
-
-  async updateDoc(docId: string, patch: Partial<Pick<DocRec, 'content' | 'title' | 'currentVersion' | 'sourceBindings' | 'generatedAt'>>): Promise<DocRec | null> {
-    const doc = this.docs.get(docId);
-    if (!doc) return null;
-    Object.assign(doc, patch, { updatedAt: now() });
-    return doc;
-  }
-
-  async addVersion(input: AddVersionInput): Promise<VersionRec> {
-    const rec: VersionRec = {
-      versionId: `v_${shortHash(input.docId + input.versionNo + Math.random())}`,
-      docId: input.docId,
-      versionNo: input.versionNo,
-      commitHash: input.commitHash,
-      content: input.content,
-      message: input.message,
-      source: input.source,
-      authorId: input.author?.userId,
-      authorLogin: input.author?.login,
-      authorAvatarUrl: input.author?.avatarUrl,
-      createdAt: now(),
-    };
-    const list = this.versions.get(input.docId) ?? [];
-    list.push(rec);
-    this.versions.set(input.docId, list);
-    return rec;
-  }
-
-  async listVersions(docId: string): Promise<VersionRec[]> {
-    return [...(this.versions.get(docId) ?? [])].sort((a, b) => b.versionNo - a.versionNo);
-  }
-
-  async getVersion(docId: string, versionNo: number): Promise<VersionRec | null> {
-    return (this.versions.get(docId) ?? []).find((v) => v.versionNo === versionNo) ?? null;
-  }
-
-  async setVersionExternalCommit(docId: string, versionNo: number, info: { sha: string; url: string }): Promise<void> {
-    const v = (this.versions.get(docId) ?? []).find((x) => x.versionNo === versionNo);
-    if (v) {
-      v.externalCommitSha = info.sha;
-      v.externalCommitUrl = info.url;
-    }
-  }
-
-  async addNote(projectId: string): Promise<void> {
-    this.notes.set(projectId, (this.notes.get(projectId) ?? 0) + 1);
-  }
-
-  async addFiles(projectId: string, files: Array<{ name: string; content: string }>): Promise<void> {
-    this.files.set(projectId, (this.files.get(projectId) ?? 0) + files.length);
-  }
-}
-
 /* ---- Mongoose store -------------------------------------- */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const toStr = (v: any) => String(v);
@@ -381,8 +209,10 @@ class MongoDataStore implements DataStore {
     const doc = await Documentation.findById(docId);
     return doc ? this.mapDoc(doc) : null;
   }
-  async listDocsByUser(): Promise<DocRec[]> {
-    const docs = await Documentation.find().sort({ updatedAt: -1 });
+  async listDocsByUser(userId: string): Promise<DocRec[]> {
+    const projects = await Project.find({ $or: [{ userId }, { 'members.userId': userId }] });
+    const projectIds = projects.map((p) => p._id);
+    const docs = await Documentation.find({ projectId: { $in: projectIds } }).sort({ updatedAt: -1 });
     return docs.map((d) => this.mapDoc(d));
   }
   async listDocsByProject(projectId: string): Promise<DocRec[]> {
@@ -487,4 +317,4 @@ class MongoDataStore implements DataStore {
   }
 }
 
-export const dataStore: DataStore = env.mockMode ? new MemoryDataStore() : new MongoDataStore();
+export const dataStore: DataStore = new MongoDataStore();

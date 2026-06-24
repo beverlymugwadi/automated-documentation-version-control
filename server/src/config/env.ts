@@ -2,16 +2,10 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const bool = (value: string | undefined): boolean =>
-  String(value).toLowerCase() === 'true';
-
 const PORT = Number(process.env.PORT) || 4000;
 const MONGODB_URI = process.env.MONGODB_URI ?? '';
 const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID ?? '';
 const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET ?? '';
-
-const explicitMock = bool(process.env.MOCK_MODE);
-const storageMock = explicitMock || !MONGODB_URI;
 const githubConfigured = Boolean(GITHUB_CLIENT_ID && GITHUB_CLIENT_SECRET);
 
 export const env = {
@@ -28,7 +22,7 @@ export const env = {
     callbackUrl:
       process.env.GITHUB_CALLBACK_URL ??
       'http://localhost:4000/api/auth/github/callback',
-    scope: process.env.GITHUB_SCOPE ?? 'read:user,public_repo',
+    scope: process.env.GITHUB_SCOPE ?? 'user:email,read:user,public_repo',
   },
 
   clientUrl: process.env.CLIENT_URL ?? 'http://localhost:5173',
@@ -41,12 +35,6 @@ export const env = {
   llmAvailable: Boolean(process.env.OPENAI_API_KEY),
 
   githubConfigured,
-  mockMode: storageMock,
-  mockReason: storageMock
-    ? explicitMock
-      ? 'MOCK_MODE=true'
-      : 'no MONGODB_URI'
-    : null,
 } as const;
 
 export type Env = typeof env;

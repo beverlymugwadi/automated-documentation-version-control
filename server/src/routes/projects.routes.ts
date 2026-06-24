@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { requireAuth } from '../middleware/requireAuth';
 import { validateBody } from '../middleware/validate';
 import {
+  createProject,
   listProjects,
   getProject,
   deleteProject,
@@ -14,6 +15,7 @@ import {
 const router = Router();
 router.use(requireAuth);
 
+router.post('/', createProject);
 router.get('/', listProjects);
 router.get('/:projectId', getProject);
 router.delete('/:projectId', deleteProject);

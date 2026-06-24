@@ -1,9 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import simpleGit from 'simple-git';
-import { env } from '../config/env';
 import { dataStore, type VersionRec, type Author } from '../lib/dataStore';
-import { shortHash } from '../lib/crypto';
 
 export interface SaveVersionOptions {
   source?: VersionRec['source'];
@@ -21,7 +19,8 @@ async function commitToGit(docId: string, content: string, message: string): Pro
   const dir = repoDir(docId);
   await fs.mkdir(dir, { recursive: true });
   const git = simpleGit(dir);
-  if (!(await git.checkIsRepo().catch(() => false))) {
+  const hasGitDir = await fs.access(path.join(dir, '.git')).then(() => true).catch(() => false);
+  if (!hasGitDir) {
     await git.init();
     await git.addConfig('user.name', 'ADGVC');
     await git.addConfig('user.email', 'adgvc@local');
@@ -42,12 +41,7 @@ export async function saveDocVersion(
   const existing = await dataStore.listVersions(docId);
   const versionNo = existing.length + 1;
 
-  let commitHash: string;
-  if (env.mockMode) {
-    commitHash = shortHash(`${docId}:${versionNo}:${content.length}:${Date.now()}`);
-  } else {
-    commitHash = await commitToGit(docId, content, message);
-  }
+  const commitHash = await commitToGit(docId, content, message);
 
   const version = await dataStore.addVersion({
     docId,

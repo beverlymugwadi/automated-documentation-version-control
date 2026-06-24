@@ -1,12 +1,10 @@
 import type { Request, Response } from 'express';
 import { z } from 'zod';
 import { asyncHandler } from '../lib/asyncHandler';
-import { env } from '../config/env';
 import { dataStore, type DocRec } from '../lib/dataStore';
 import { resolveGithubToken } from '../lib/githubToken';
-import { commitFile, parseRepo, GithubScopeError } from '../services/githubService';
+import { commitFile, parseRepo, GithubScopeError, BranchProtectedError } from '../services/githubService';
 import { roleOf } from '../lib/access';
-import { shortHash } from '../lib/crypto';
 import { HttpError } from '../middleware/errorHandler';
 
 async function ownedDoc(docId: string, userId: string): Promise<DocRec> {
@@ -35,25 +33,23 @@ export const commitToGithub = asyncHandler(async (req: Request, res: Response) =
   const { repoFullName, branch, path, message } = req.body as z.infer<typeof commitSchema>;
   const finalPath = path || `docs/${slug(doc.title)}.md`;
 
+  const token = await resolveGithubToken(req.user!.userId);
+  if (!token) throw new HttpError(401, 'Connect GitHub to publish documentation.');
+  const { owner, repo } = parseRepo(repoFullName);
   let result: { commitSha: string; commitUrl: string };
-
-  if (env.mockMode) {
-    const sha = shortHash(`${repoFullName}:${finalPath}:${Date.now()}`).padEnd(40, '0');
-    result = { commitSha: sha, commitUrl: `https://github.com/${repoFullName}/commit/${sha.slice(0, 7)}` };
-  } else {
-    const token = await resolveGithubToken(req.user!.userId);
-    if (!token) throw new HttpError(401, 'Connect GitHub to publish documentation.');
-    const { owner, repo } = parseRepo(repoFullName);
-    try {
-      const r = await commitFile(token, { owner, repo, path: finalPath, branch, message, content: doc.content });
-      result = { commitSha: r.commitSha, commitUrl: r.commitUrl };
-    } catch (err) {
-      if (err instanceof GithubScopeError) {
-        res.status(403).json({ error: { code: 'GITHUB_WRITE_SCOPE_REQUIRED', message: err.message } });
-        return;
-      }
-      throw err;
+  try {
+    const r = await commitFile(token, { owner, repo, path: finalPath, branch, message, content: doc.content });
+    result = { commitSha: r.commitSha, commitUrl: r.commitUrl };
+  } catch (err) {
+    if (err instanceof GithubScopeError) {
+      res.status(403).json({ error: { code: 'GITHUB_WRITE_SCOPE_REQUIRED', message: err.message } });
+      return;
     }
+    if (err instanceof BranchProtectedError) {
+      res.status(422).json({ error: { code: 'BRANCH_PROTECTED', message: err.message } });
+      return;
+    }
+    throw err;
   }
 
   await dataStore.setVersionExternalCommit(doc.docId, doc.currentVersion, { sha: result.commitSha, url: result.commitUrl });

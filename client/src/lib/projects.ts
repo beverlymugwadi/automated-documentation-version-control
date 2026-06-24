@@ -52,6 +52,11 @@ export async function listProjects(): Promise<ProjectSummary[]> {
   return data.projects;
 }
 
+export async function createProject(input: { projectName: string; description?: string }): Promise<ProjectDetail> {
+  const { data } = await api.post<{ project: ProjectDetail }>('/projects', input);
+  return data.project;
+}
+
 export async function getProject(projectId: string): Promise<{ project: ProjectDetail; documents: ProjectDocSummary[] }> {
   const { data } = await api.get<{ project: ProjectDetail; documents: ProjectDocSummary[] }>(`/projects/${projectId}`);
   return data;

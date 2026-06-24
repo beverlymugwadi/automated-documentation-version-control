@@ -16,6 +16,13 @@ export class WriteScopeError extends Error {
   }
 }
 
+export class BranchProtectedError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'BranchProtectedError';
+  }
+}
+
 export async function commitToGithub(
   docId: string,
   input: { repoFullName: string; branch: string; path: string; message: string },
@@ -27,6 +34,7 @@ export async function commitToGithub(
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const e = (err as any)?.response?.data?.error;
     if (e?.code === 'GITHUB_WRITE_SCOPE_REQUIRED') throw new WriteScopeError(e.message);
+    if (e?.code === 'BRANCH_PROTECTED') throw new BranchProtectedError(e.message);
     throw err;
   }
 }

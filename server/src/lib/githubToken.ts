@@ -1,11 +1,11 @@
 import { userStore } from './userStore';
-import { decryptSecret } from './crypto';
+import { decrypt } from './crypto';
 
 export async function resolveGithubToken(userId: string): Promise<string | null> {
   const enc = await userStore.getEncryptedGithubToken(userId);
-  if (!enc || enc === 'mock') return null;
+  if (!enc) return null;
   try {
-    return decryptSecret(enc);
+    return decrypt(enc);
   } catch {
     return null;
   }

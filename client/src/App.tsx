@@ -13,6 +13,7 @@ import { Transform } from './pages/Transform';
 import { DocWorkspace } from './pages/DocWorkspace';
 import { Projects } from './pages/Projects';
 import { ProjectDetail } from './pages/ProjectDetail';
+import { Account } from './pages/Account';
 
 function Root() {
   const { isAuthenticated } = useAuth();
@@ -41,6 +42,7 @@ export default function App() {
           <Route path="/docs/:docId" element={<DocWorkspace />} />
           <Route path="/projects" element={<Projects />} />
           <Route path="/projects/:projectId" element={<ProjectDetail />} />
+          <Route path="/account" element={<Account />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/" replace />} />

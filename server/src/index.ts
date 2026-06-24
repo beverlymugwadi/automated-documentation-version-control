@@ -3,23 +3,17 @@ import { env } from './config/env';
 import { connectDB, disconnectDB } from './config/db';
 
 async function start(): Promise<void> {
-  let usingDb = false;
   try {
-    usingDb = await connectDB();
+    await connectDB();
   } catch (err) {
     console.error('[adgvc] MongoDB connection failed:', (err as Error).message);
-    console.error('[adgvc] Set MOCK_MODE=true to run without a database.');
     process.exit(1);
   }
 
   const app = createApp();
   const server = app.listen(env.port, () => {
     console.log(`[adgvc] API listening on http://localhost:${env.port} (${env.nodeEnv})`);
-    console.log(
-      usingDb
-        ? '[adgvc] Data source: MongoDB'
-        : `[adgvc] Data source: in-memory (MOCK MODE)`,
-    );
+    console.log('[adgvc] Data source: MongoDB');
   });
 
   const shutdown = (signal: string): void => {

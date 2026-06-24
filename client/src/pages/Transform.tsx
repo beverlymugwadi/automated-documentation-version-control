@@ -1,15 +1,18 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sparkles, NotebookPen, FileCode2, ChevronDown, ChevronRight, X, FileText, Pencil, Save, Clock, Wand2, Layers } from 'lucide-react';
-import { Button, Badge, Tooltip } from '../components/ui';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Sparkles, NotebookPen, FileCode2, ChevronDown, ChevronRight, X, FileText, Pencil, Save, Clock, Wand2, Layers, FolderGit2 } from 'lucide-react';
+import { Button, Badge, Tooltip, Input } from '../components/ui';
 import { Markdown } from '../components/Markdown';
 import { CodeBlock, langFromPath } from '../components/CodeBlock';
 import { MarkdownEditor } from '../components/MarkdownEditor';
 import { PipelineConnector } from '../components/PipelineConnector';
+import { ExportMenu } from '../components/ExportMenu';
 import { EmptyState } from '../components/states/States';
 import { useStagedStore } from '../store/stagedStore';
 import { generateDoc } from '../lib/generate';
 import { saveVersion } from '../lib/versions';
+import { listProjects, createProject } from '../lib/projects';
 import { toast } from '../store/toastStore';
 
 const PLACEHOLDER = `Write notes the way you'd brief a teammate. For example:
@@ -23,14 +26,23 @@ TODO: persistence is in-memory only.`;
 type View = 'preview' | 'source' | 'edit';
 type Variant = 'structured' | 'ai';
 
+const NEW_PROJECT_SENTINEL = '__new__';
+
 export function Transform() {
   const navigate = useNavigate();
+  const qc = useQueryClient();
   const staged = useStagedStore((s) => s.files);
   const removeStaged = useStagedStore((s) => s.remove);
+
+  const { data: projects } = useQuery({ queryKey: ['projects'], queryFn: listProjects });
 
   const [tab, setTab] = useState<'notes' | 'files'>('notes');
   const [notes, setNotes] = useState('');
   const [running, setRunning] = useState(false);
+
+  // Project selection: '' = first existing project or new, '__new__' = create new
+  const [selectedProjectId, setSelectedProjectId] = useState('');
+  const [newProjectName, setNewProjectName] = useState('');
 
   const [docId, setDocId] = useState<string | null>(null);
   const [ruleBased, setRuleBased] = useState('');
@@ -45,13 +57,32 @@ export function Transform() {
 
   const active = variant === 'ai' && llm ? llm : ruleBased;
 
+  // Resolve the project ID to use when generating
+  async function resolveProjectId(): Promise<string | undefined> {
+    const choice = selectedProjectId || (projects && projects.length > 0 ? projects[0].projectId : NEW_PROJECT_SENTINEL);
+
+    if (choice === NEW_PROJECT_SENTINEL) {
+      const name = newProjectName.trim();
+      if (!name) { toast.error('Enter a project name before generating.'); return undefined; }
+      const project = await createProject({ projectName: name });
+      await qc.invalidateQueries({ queryKey: ['projects'] });
+      setSelectedProjectId(project.projectId);
+      setNewProjectName('');
+      return project.projectId;
+    }
+    return choice;
+  }
+
   async function onGenerate() {
     if (!notes.trim() && staged.length === 0) { toast.error('Add notes or stage a source file first.'); return; }
     setRunning(true);
     try {
+      const projectId = await resolveProjectId();
+      if (!projectId) { setRunning(false); return; }
+
       const sourceRepo = staged.find((f) => f.repo)?.repo;
       const bindings = staged.filter((f) => f.repo && f.sha).map((f) => ({ repoFullName: f.repo!, path: f.path, branch: f.branch ?? 'main', commitSha: f.sha! }));
-      const res = await generateDoc({ notes, sourceRepo, files: staged.map((f) => ({ name: f.path || f.name, content: f.content })), bindings });
+      const res = await generateDoc({ notes, sourceRepo, projectId, files: staged.map((f) => ({ name: f.path || f.name, content: f.content })), bindings });
       setDocId(res.docId);
       setRuleBased(res.ruleBasedMarkdown);
       setLlm(res.llmMarkdown);
@@ -62,6 +93,7 @@ export function Transform() {
       toast.success('Documentation generated', `in ${(res.generationMs / 1000).toFixed(1)}s`);
       if (res.llmError) toast.error('AI synthesis unavailable', res.llmError);
     } catch (err) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       toast.error('Generation failed', (err as any)?.response?.data?.error?.message);
     } finally { setRunning(false); }
   }
@@ -79,6 +111,19 @@ export function Transform() {
     } catch { toast.error('Could not save version'); }
     finally { setSaving(false); }
   }
+
+  // Save the AI variant as-is without entering edit mode
+  async function onSaveAI() {
+    if (!docId || !llm) return;
+    setSaving(true);
+    try {
+      await saveVersion(docId, llm, 'AI-enhanced version');
+      toast.success('AI version saved');
+    } catch { toast.error('Could not save AI version'); }
+    finally { setSaving(false); }
+  }
+
+  const effectiveChoice = selectedProjectId || (projects && projects.length > 0 ? projects[0].projectId : NEW_PROJECT_SENTINEL);
 
   return (
     <div className={`transform ${running ? 'transform--running' : ''}`}>
@@ -127,7 +172,35 @@ export function Transform() {
           </div>
         )}
 
-        <div style={{ marginTop: 'var(--sp-4)' }}>
+        {/* Project picker */}
+        <div style={{ marginTop: 'var(--sp-4)', borderTop: '1px solid var(--line)', paddingTop: 'var(--sp-3)' }}>
+          <label style={{ fontSize: 'var(--text-sm)', fontWeight: 500, display: 'flex', alignItems: 'center', gap: 'var(--sp-2)', marginBottom: 'var(--sp-2)' }}>
+            <FolderGit2 size={14} /> Save to project
+          </label>
+          <select
+            value={effectiveChoice}
+            onChange={(e) => setSelectedProjectId(e.target.value)}
+            style={{ width: '100%', padding: 'var(--sp-2) var(--sp-3)', borderRadius: 'var(--radius)', border: '1px solid var(--line)', background: 'var(--surface-1)', color: 'inherit', fontSize: 'var(--text-sm)' }}
+          >
+            {projects && projects.map((p) => (
+              <option key={p.projectId} value={p.projectId}>{p.projectName}</option>
+            ))}
+            <option value={NEW_PROJECT_SENTINEL}>＋ New project…</option>
+          </select>
+
+          {effectiveChoice === NEW_PROJECT_SENTINEL && (
+            <div style={{ marginTop: 'var(--sp-2)' }}>
+              <Input
+                label="Project name"
+                placeholder="e.g. Auth Service"
+                value={newProjectName}
+                onChange={(e) => setNewProjectName(e.target.value)}
+              />
+            </div>
+          )}
+        </div>
+
+        <div style={{ marginTop: 'var(--sp-3)' }}>
           <Button variant="primary" block leftIcon={<Sparkles size={16} />} loading={running} onClick={onGenerate}>
             Generate documentation
           </Button>
@@ -153,6 +226,12 @@ export function Transform() {
                     <button className={view === 'preview' ? 'active' : ''} onClick={() => setView('preview')}>Preview</button>
                     <button className={view === 'source' ? 'active' : ''} onClick={() => setView('source')}>Markdown</button>
                   </div>
+                  {variant === 'ai' && llm && docId && (
+                    <Button size="sm" variant="primary" leftIcon={<Save size={14} />} loading={saving} onClick={onSaveAI}>
+                      Save AI version
+                    </Button>
+                  )}
+                  {docId && <ExportMenu docId={docId} />}
                   <Button size="sm" variant="secondary" leftIcon={<Pencil size={14} />} onClick={() => { setDraft(active); setView('edit'); }}>Edit</Button>
                 </>
               )}

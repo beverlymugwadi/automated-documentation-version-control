@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '../../store/authStore';
 import { fetchMe, loginRequest, registerRequest, logoutRequest } from '../auth';
@@ -19,8 +19,13 @@ export function useAuth() {
 
   const user = meQuery.data ?? null;
 
-  if (meQuery.data) setUser(meQuery.data);
-  if (meQuery.isError && token) clearSession();
+  useEffect(() => {
+    if (meQuery.data) setUser(meQuery.data);
+  }, [meQuery.data, setUser]);
+
+  useEffect(() => {
+    if (meQuery.isError && token) clearSession();
+  }, [meQuery.isError, token, clearSession]);
 
   const login = useCallback(
     async (email: string, password: string) => {

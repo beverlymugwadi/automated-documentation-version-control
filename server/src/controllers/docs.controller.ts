@@ -9,7 +9,6 @@ import { synthesize } from '../services/llmSynthesis';
 import { checkDrift, simulateDrift, pullCurrentSource, isFlaggedOutdated, clearDrift } from '../services/driftService';
 import { resolveGithubToken } from '../lib/githubToken';
 import { authorFromReq, roleOf } from '../lib/access';
-import { env } from '../config/env';
 import { HttpError } from '../middleware/errorHandler';
 
 async function ownedDoc(docId: string, userId: string): Promise<DocRec> {
@@ -130,7 +129,6 @@ export const drift = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const simulate = asyncHandler(async (req: Request, res: Response) => {
-  if (!env.mockMode) throw new HttpError(400, 'Drift simulation is only available in MOCK_MODE.');
   const doc = await ownedDoc(req.params.docId, req.user!.userId);
   if (doc.sourceBindings.length === 0) {
     throw new HttpError(400, 'This document has no bound source files to drift.');
