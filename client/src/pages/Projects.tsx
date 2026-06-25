@@ -7,7 +7,7 @@ import { EmptyState, ErrorState, Skeletons } from '../components/states/States';
 import { DeleteProjectModal } from '../components/DeleteProjectModal';
 import { listProjects, createProject, deleteProject, type ProjectSummary } from '../lib/projects';
 import { relativeTime } from '../lib/time';
-import { toast } from '../store/toastStore';
+import { toast } from '../routes/store/toastStore';
 
 export function Projects() {
   const navigate = useNavigate();

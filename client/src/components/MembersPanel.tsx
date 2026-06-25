@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { UserPlus, X, Crown } from 'lucide-react';
 import { Button, Input, Badge } from './ui';
 import { addMember, removeMember, type Member, type Role } from '../lib/projects';
-import { toast } from '../store/toastStore';
+import { toast } from '../routes/store/toastStore';
 
 export function MembersPanel({ projectId, members, role, onChange }: {
   projectId: string; members: Member[]; role: Role | null; onChange: (members: Member[]) => void;

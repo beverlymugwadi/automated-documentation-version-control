@@ -1,14 +1,19 @@
 import { api } from './api';
 
+export type DriftState = 'current' | 'implementation_changed' | 'signature_changed';
+
 export interface ChangedFile {
   path: string;
   oldSha: string;
   newSha: string;
+  driftState: DriftState;
   changedAt: string;
+  changedFunctions: string[];
 }
 
 export interface DriftResult {
   isOutdated: boolean;
+  worstState: DriftState;
   changedFiles: ChangedFile[];
 }
 
@@ -27,6 +32,8 @@ export interface RegenerateResult {
   ruleBasedMarkdown: string;
   llmMarkdown: string | null;
   llmAvailable: boolean;
+  llmError?: string;
+  derivedTitle?: string;
 }
 
 export async function regenerateDoc(docId: string): Promise<RegenerateResult> {

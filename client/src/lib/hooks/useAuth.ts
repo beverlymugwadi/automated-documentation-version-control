@@ -1,6 +1,6 @@
 import { useCallback, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useAuthStore } from '../../store/authStore';
+import { useAuthStore } from '../../routes/store/authStore';
 import { fetchMe, loginRequest, registerRequest, logoutRequest } from '../auth';
 
 export function useAuth() {

@@ -1,7 +1,7 @@
 import CodeMirror from '@uiw/react-codemirror';
 import { markdown } from '@codemirror/lang-markdown';
 import { EditorView } from '@codemirror/view';
-import { useThemeStore } from '../store/themeStore';
+import { useThemeStore } from '../routes/store/themeStore';
 
 function cssVar(name: string): string {
   return getComputedStyle(document.documentElement).getPropertyValue(name).trim();

@@ -8,7 +8,7 @@ import { MembersPanel } from '../components/MembersPanel';
 import { DeleteProjectModal } from '../components/DeleteProjectModal';
 import { getProject, deleteProject, type Member } from '../lib/projects';
 import { relativeTime } from '../lib/time';
-import { toast } from '../store/toastStore';
+import { toast } from '../routes/store/toastStore';
 
 export function ProjectDetail() {
   const { projectId = '' } = useParams();

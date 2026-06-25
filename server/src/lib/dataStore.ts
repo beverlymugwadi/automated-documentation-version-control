@@ -23,6 +23,8 @@ export interface SourceBinding {
   path: string;
   branch: string;
   commitSha: string;
+  /** sha256 of exported signatures at generation time — used for three-state drift detection. */
+  signatureHash?: string;
 }
 
 export interface ProjectRec {

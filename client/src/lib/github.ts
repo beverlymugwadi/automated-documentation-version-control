@@ -25,9 +25,19 @@ export async function fetchRepos(search?: string): Promise<{ repos: Repo[]; hasM
   return data;
 }
 
-export async function fetchTree(owner: string, repo: string, branch: string): Promise<TreeNode[]> {
-  const { data } = await api.get<{ tree: TreeNode[] }>(`/github/repos/${owner}/${repo}/tree`, { params: { branch } });
-  return data.tree;
+export interface TreeResult {
+  tree: TreeNode[];
+  /** The branch the server actually used — may differ from requested when the
+   *  repo's default branch is 'master' but 'main' was requested. */
+  branch: string;
+}
+
+export async function fetchTree(owner: string, repo: string, branch: string): Promise<TreeResult> {
+  const { data } = await api.get<{ tree: TreeNode[]; branch: string }>(
+    `/github/repos/${owner}/${repo}/tree`,
+    { params: { branch } },
+  );
+  return { tree: data.tree, branch: data.branch };
 }
 
 export async function fetchFile(owner: string, repo: string, path: string, branch: string): Promise<{ path: string; content: string; sha: string }> {

@@ -6,7 +6,7 @@ import { Button, Card, Input, Modal } from '../components/ui';
 import { useAuth } from '../lib/hooks/useAuth';
 import { deleteAccountRequest, disconnectGithubRequest } from '../lib/auth';
 import { GitHubConnectModal } from '../components/GitHubConnectModal';
-import { toast } from '../store/toastStore';
+import { toast } from '../routes/store/toastStore';
 
 function initials(name: string): string {
   return name.split(' ').map((p) => p[0]).filter(Boolean).slice(0, 2).join('').toUpperCase();

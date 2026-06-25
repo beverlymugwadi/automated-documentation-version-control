@@ -1,14 +1,16 @@
 import type { Request, Response } from 'express';
 import { z } from 'zod';
 import { asyncHandler } from '../lib/asyncHandler';
-import { dataStore, type DocRec } from '../lib/dataStore';
+import { dataStore, type DocRec, type SourceBinding } from '../lib/dataStore';
 import { saveDocVersion } from '../services/versionService';
 import { lineDiff } from '../lib/diff';
 import { compose } from '../services/docComposer';
 import { synthesize } from '../services/llmSynthesis';
-import { checkDrift, simulateDrift, pullCurrentSource, isFlaggedOutdated, clearDrift } from '../services/driftService';
+import { checkDrift, simulateDrift, pullCurrentSource, isFlaggedOutdated, clearDrift, getCachedDriftState } from '../services/driftService';
 import { resolveGithubToken } from '../lib/githubToken';
 import { authorFromReq, roleOf } from '../lib/access';
+import { parseFile } from '../services/astParser';
+import { computeSignatureHash } from '../lib/signatureHash';
 import { HttpError } from '../middleware/errorHandler';
 
 async function ownedDoc(docId: string, userId: string): Promise<DocRec> {
@@ -47,6 +49,7 @@ export const listDocs = asyncHandler(async (req: Request, res: Response) => {
       currentVersion: d.currentVersion,
       updatedAt: d.updatedAt,
       outdated: isFlaggedOutdated(d.docId),
+      driftState: getCachedDriftState(d.docId),
     })),
   });
 });
@@ -125,6 +128,7 @@ export const drift = asyncHandler(async (req: Request, res: Response) => {
   const doc = await ownedDoc(req.params.docId, req.user!.userId);
   const token = await resolveGithubToken(req.user!.userId);
   const result = await checkDrift(doc, token);
+  // Return the three-state result; isOutdated is kept for backwards compat.
   res.json(result);
 });
 
@@ -146,22 +150,55 @@ export const regenerate = asyncHandler(async (req: Request, res: Response) => {
   }
 
   const { files, newBindings } = await pullCurrentSource(doc, token);
+
+  // Recompute signatureHash for each file after pulling fresh source.
+  const bindingsWithFreshHash: SourceBinding[] = newBindings.map((b) => {
+    const fileContent = files.find((f) => f.name === b.path)?.content;
+    let signatureHash: string | undefined = b.signatureHash;
+    if (fileContent) {
+      try {
+        signatureHash = computeSignatureHash(parseFile(b.path, fileContent));
+      } catch { /* keep old hash if parse fails */ }
+    }
+    return { ...b, signatureHash };
+  });
+
   const { markdown: ruleBasedMarkdown, structure } = compose({
     title: doc.title,
     notes: '',
     files,
     sourceRepo: doc.sourceRepo,
   });
-  const { llmMarkdown, llmAvailable, llmError } = await synthesize(structure, files);
+  const { llmMarkdown, llmAvailable, llmError, derivedTitle } = await synthesize(structure, files);
 
-  await dataStore.updateDoc(doc.docId, { sourceBindings: newBindings, generatedAt: new Date().toISOString() });
-  const version = await saveDocVersion(doc.docId, ruleBasedMarkdown, 'Regenerated from updated source', {
+  // Update the stored source bindings and generation timestamp.
+  await dataStore.updateDoc(doc.docId, {
+    sourceBindings: bindingsWithFreshHash,
+    generatedAt: new Date().toISOString(),
+  });
+
+  // Prefer the AI-enhanced content when available — that is what the user expects
+  // when they click "Update documentation".  The rule-based content is always
+  // returned alongside so the client can offer a toggle.
+  const contentToSave = llmMarkdown ?? ruleBasedMarkdown;
+  const versionMessage = llmMarkdown
+    ? 'Regenerated from updated source (AI-enhanced)'
+    : 'Regenerated from updated source';
+
+  const version = await saveDocVersion(doc.docId, contentToSave, versionMessage, {
     source: 'regenerate',
     author: authorFromReq(req),
   });
   clearDrift(doc.docId);
 
-  res.status(201).json({ version: versionView(version), ruleBasedMarkdown, llmMarkdown, llmAvailable, llmError });
+  res.status(201).json({
+    version: versionView(version),
+    ruleBasedMarkdown,
+    llmMarkdown,
+    llmAvailable,
+    llmError,
+    derivedTitle,
+  });
 });
 
 export const schemas = { saveSchema, rollbackSchema };

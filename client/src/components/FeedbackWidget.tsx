@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Star } from 'lucide-react';
 import { api } from '../lib/api';
-import { toast } from '../store/toastStore';
+import { toast } from '../routes/store/toastStore';
 
 export function FeedbackWidget({ docId }: { docId: string }) {
   const [rating, setRating] = useState(0);

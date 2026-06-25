@@ -1,4 +1,5 @@
 import { api } from './api';
+import type { DriftState } from './drift';
 
 export interface DocSummary {
   docId: string;
@@ -9,6 +10,7 @@ export interface DocSummary {
   currentVersion: number;
   updatedAt: string;
   outdated: boolean;
+  driftState: DriftState;
 }
 
 export interface SourceBinding {

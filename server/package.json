@@ -16,6 +16,7 @@
     "@babel/parser": "^7.26.3",
     "@babel/traverse": "^7.26.4",
     "bcryptjs": "^2.4.3",
+    "comment-parser": "^1.4.7",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "docx": "^9.0.3",

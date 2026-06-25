@@ -2,11 +2,12 @@ import { api } from './api';
 
 export interface CommitResult {
   committed: true;
-  path: string;
+  docPath: string;
   branch: string;
   repoFullName: string;
   commitSha: string;
   commitUrl: string;
+  manifestPath: string;
 }
 
 export class WriteScopeError extends Error {
@@ -25,7 +26,7 @@ export class BranchProtectedError extends Error {
 
 export async function commitToGithub(
   docId: string,
-  input: { repoFullName: string; branch: string; path: string; message: string },
+  input: { repoFullName: string; branch: string; docPath?: string; message: string },
 ): Promise<CommitResult> {
   try {
     const { data } = await api.post<CommitResult>(`/docs/${docId}/commit-to-github`, input);

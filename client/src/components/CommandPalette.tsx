@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Search, LayoutGrid, FileText, FilePlus2, FolderGit2, SunMoon, LogOut, CornerDownLeft } from 'lucide-react';
-import { useThemeStore } from '../store/themeStore';
+import { useThemeStore } from '../routes/store/themeStore';
 import { useAuth } from '../lib/hooks/useAuth';
 import { listDocs } from '../lib/docs';
 

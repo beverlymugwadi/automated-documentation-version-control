@@ -52,7 +52,7 @@ export function Repos() {
           {data.repos.map((r) => {
             const [owner, name] = r.fullName.split('/');
             return (
-              <div key={r.id} className="repo-row" onClick={() => navigate(`/repos/${owner}/${name}`)}>
+              <div key={r.id} className="repo-row" onClick={() => navigate(`/repos/${owner}/${name}?branch=${encodeURIComponent(r.defaultBranch)}`)}>
                 <div className="repo-row__main">
                   <div className="repo-row__name">
                     <FolderGit2 size={16} style={{ color: 'var(--signal)' }} />

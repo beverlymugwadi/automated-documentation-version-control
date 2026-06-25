@@ -1,6 +1,6 @@
 import { createPortal } from 'react-dom';
 import { CheckCircle2, AlertTriangle, Info, X } from 'lucide-react';
-import { useToastStore, type ToastTone } from '../../store/toastStore';
+import { useToastStore, type ToastTone } from '../../routes/store/toastStore';
 
 const ICON: Record<ToastTone, typeof Info> = {
   success: CheckCircle2,

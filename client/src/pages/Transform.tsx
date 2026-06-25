@@ -9,11 +9,11 @@ import { MarkdownEditor } from '../components/MarkdownEditor';
 import { PipelineConnector } from '../components/PipelineConnector';
 import { ExportMenu } from '../components/ExportMenu';
 import { EmptyState } from '../components/states/States';
-import { useStagedStore } from '../store/stagedStore';
+import { useStagedStore } from '../routes/store/stagedStore';
 import { generateDoc } from '../lib/generate';
 import { saveVersion } from '../lib/versions';
 import { listProjects, createProject } from '../lib/projects';
-import { toast } from '../store/toastStore';
+import { toast } from '../routes/store/toastStore';
 
 const PLACEHOLDER = `Write notes the way you'd brief a teammate. For example:
 

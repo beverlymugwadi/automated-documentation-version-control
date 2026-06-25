@@ -43,7 +43,8 @@ export function Dashboard() {
               <div className="row" style={{ gap: 'var(--sp-2)' }}>
                 <FileText size={16} style={{ color: 'var(--signal)' }} />
                 <span className="doc-card__title" style={{ flex: 1, minWidth: 0 }}>{d.title}</span>
-                {d.outdated && <Badge tone="amber" dot>Outdated</Badge>}
+                {d.driftState === 'signature_changed' && <Badge tone="remove" dot>Signatures changed</Badge>}
+                {d.driftState === 'implementation_changed' && <Badge tone="amber" dot>Updated upstream</Badge>}
               </div>
               <button className="muted" style={{ fontSize: 'var(--text-sm)', flex: 1, textAlign: 'left', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
                 onClick={(e) => { e.stopPropagation(); navigate(`/projects/${d.projectId}`); }} title="Open project">

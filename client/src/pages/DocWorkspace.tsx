@@ -16,8 +16,7 @@ import { LoadingState, ErrorState } from '../components/states/States';
 import { getDoc } from '../lib/docs';
 import { fetchVersions, fetchVersionContent, fetchDiff, saveVersion, rollback, type Diff } from '../lib/versions';
 import { checkDrift, simulateDrift, regenerateDoc, type ChangedFile } from '../lib/drift';
-import { useHealth } from '../lib/hooks/useHealth';
-import { toast } from '../store/toastStore';
+import { toast } from '../routes/store/toastStore';
 
 type Mode = 'view' | 'edit' | 'compare';
 
@@ -42,13 +41,12 @@ export function DocWorkspace() {
   const [rolling, setRolling] = useState(false);
 
   const [changedFiles, setChangedFiles] = useState<ChangedFile[]>([]);
+  const [worstState, setWorstState] = useState<import('../lib/drift').DriftState>('current');
   const [checking, setChecking] = useState(false);
   const [updating, setUpdating] = useState(false);
   const [highlight, setHighlight] = useState<number | undefined>(undefined);
   const [commitOpen, setCommitOpen] = useState(false);
 
-  const health = useHealth();
-  const isMock = health.data?.mockMode ?? false;
   const doc = docQuery.data;
   const versions = versionsQuery.data ?? [];
   const activeVersion = viewing ?? doc?.currentVersion ?? 1;
@@ -103,7 +101,12 @@ export function DocWorkspace() {
     try {
       const result = await checkDrift(docId);
       setChangedFiles(result.changedFiles);
-      if (announce) toast[result.isOutdated ? 'info' : 'success'](result.isOutdated ? 'Source has changed upstream' : 'Documentation is up to date');
+      setWorstState(result.worstState ?? (result.isOutdated ? 'implementation_changed' : 'current'));
+      if (announce) {
+        if (!result.isOutdated) toast.success('Documentation is up to date');
+        else if (result.worstState === 'signature_changed') toast.info('API signatures changed upstream');
+        else toast.info('Source updated upstream — API surface unchanged');
+      }
     } catch { /* drift is best-effort */ }
     finally { setChecking(false); }
   }
@@ -124,10 +127,14 @@ export function DocWorkspace() {
     setUpdating(true);
     try {
       const res = await regenerateDoc(docId);
-      setChangedFiles([]); setViewing(null); setHighlight(res.version?.versionNo);
+      setChangedFiles([]); setWorstState('current'); setViewing(null); setHighlight(res.version?.versionNo);
       await qc.invalidateQueries({ queryKey: ['doc', docId] });
       await qc.invalidateQueries({ queryKey: ['versions', docId] });
-      toast.success('Documentation updated', `New version v${res.version?.versionNo}`);
+      if (res.llmMarkdown) {
+        toast.success('Documentation updated (AI-enhanced)', `New version v${res.version?.versionNo}`);
+      } else {
+        toast.success('Documentation updated', `New version v${res.version?.versionNo}${res.llmError ? ' — AI unavailable: ' + res.llmError : ''}`);
+      }
     } catch { toast.error('Could not regenerate'); }
     finally { setUpdating(false); }
   }
@@ -146,7 +153,8 @@ export function DocWorkspace() {
           <div className="row" style={{ gap: 'var(--sp-2)' }}>
             <h1 style={{ fontSize: 'var(--text-2xl)' }}>{doc.title}</h1>
             <Badge tone="signal" mono>v{doc.currentVersion}</Badge>
-            {changedFiles.length > 0 && <Badge tone="amber" dot>Outdated</Badge>}
+            {worstState === 'signature_changed' && <Badge tone="remove" dot>Signatures changed</Badge>}
+            {worstState === 'implementation_changed' && <Badge tone="amber" dot>Updated upstream</Badge>}
           </div>
           <div className="row" style={{ gap: 'var(--sp-3)', marginTop: 6, flexWrap: 'wrap' }}>
             {doc.sourceRepo && <span className="muted mono" style={{ fontSize: 'var(--text-sm)' }}>{doc.sourceRepo}</span>}
@@ -159,14 +167,14 @@ export function DocWorkspace() {
             <button className={mode === 'compare' ? 'active' : ''} onClick={() => setMode('compare')}>Compare</button>
           </div>
           {hasBindings && <Button size="sm" variant="ghost" leftIcon={<RefreshCw size={14} />} loading={checking} onClick={() => runDriftCheck(true)}>Check for updates</Button>}
-          {hasBindings && isMock && <Button size="sm" variant="ghost" leftIcon={<FlaskConical size={14} />} onClick={onSimulateDrift} title="MOCK_MODE: simulate an upstream source change">Simulate change</Button>}
+          {hasBindings && <Button size="sm" variant="ghost" leftIcon={<FlaskConical size={14} />} onClick={onSimulateDrift} title="Simulate an upstream source change (dev tool)">Simulate change</Button>}
           {mode === 'view' && !isHistorical && <Button size="sm" variant="secondary" leftIcon={<Pencil size={14} />} onClick={() => { setDraft(doc.content); setMode('edit'); }}>Edit</Button>}
           <Button size="sm" variant="secondary" leftIcon={<Github size={14} />} onClick={() => setCommitOpen(true)}>Commit to GitHub</Button>
           <ExportMenu docId={docId} />
         </div>
       </div>
 
-      {changedFiles.length > 0 && <DriftBanner changedFiles={changedFiles} onUpdate={onRegenerate} updating={updating} />}
+      {worstState !== 'current' && <DriftBanner worstState={worstState} changedFiles={changedFiles} onUpdate={onRegenerate} updating={updating} />}
 
       <div className="workspace">
         <div className="workspace__main">
@@ -238,7 +246,16 @@ export function DocWorkspace() {
         <p>Rollback is non-destructive — it restores the content of v{rollbackTo} as a new version (v{(doc.currentVersion) + 1}). Your full history is preserved.</p>
       </Modal>
 
-      <CommitToGitHubModal open={commitOpen} onClose={() => setCommitOpen(false)} docId={docId} title={doc.title} defaultRepo={doc.sourceRepo} onCommitted={() => qc.invalidateQueries({ queryKey: ['versions', docId] })} />
+      <CommitToGitHubModal
+        open={commitOpen}
+        onClose={() => setCommitOpen(false)}
+        docId={docId}
+        title={doc.title}
+        defaultRepo={doc.sourceRepo}
+        defaultBranch={doc.sourceBindings?.[0]?.branch ?? null}
+        firstSourcePath={doc.sourceBindings?.[0]?.path ?? null}
+        onCommitted={() => qc.invalidateQueries({ queryKey: ['versions', docId] })}
+      />
 
       <div style={{ marginTop: 'var(--sp-6)', paddingTop: 'var(--sp-4)', borderTop: '1px solid var(--line)' }}>
         <FeedbackWidget docId={docId} />

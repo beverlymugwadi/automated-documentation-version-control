@@ -87,31 +87,61 @@ export async function listRepos(
   return { repos, page, hasMore: raw.length === perPage };
 }
 
+/**
+ * Fetch the repository's default branch name (e.g. "main", "master", "develop").
+ * Used as a fallback when the caller passes a branch name that doesn't exist.
+ */
+export async function getDefaultBranch(token: string, owner: string, repo: string): Promise<string> {
+  const data = await gh<{ default_branch: string }>(token, `/repos/${owner}/${repo}`);
+  return data.default_branch;
+}
+
+/**
+ * Resolve the branch to use for a repo.  Tries `requestedBranch` first; if
+ * GitHub returns 409 (ref not found) or any other error, falls back to the
+ * repo's actual default branch.
+ */
+async function resolveBranch(token: string, owner: string, repo: string, requestedBranch: string): Promise<string> {
+  try {
+    await gh<unknown>(token, `/repos/${owner}/${repo}/git/ref/heads/${requestedBranch}`);
+    return requestedBranch;
+  } catch {
+    return getDefaultBranch(token, owner, repo);
+  }
+}
+
 export async function getTree(
   token: string | null,
   owner: string,
   repo: string,
   branch: string,
-): Promise<GhTreeNode[]> {
+): Promise<{ tree: GhTreeNode[]; resolvedBranch: string }> {
   if (!token) {
-    return mockTree(`${owner}/${repo}`);
+    return { tree: mockTree(`${owner}/${repo}`), resolvedBranch: branch };
   }
+
+  // Auto-detect the correct branch — '409 ref not found' when 'main' is requested
+  // but the repo uses 'master' (or any other name).
+  const resolvedBranch = await resolveBranch(token, owner, repo, branch);
 
   const ref = await gh<{ object: { sha: string } }>(
     token,
-    `/repos/${owner}/${repo}/git/ref/heads/${branch}`,
+    `/repos/${owner}/${repo}/git/ref/heads/${resolvedBranch}`,
   );
-  const tree = await gh<{ tree: Array<{ path: string; type: string }> }>(
+  const treeData = await gh<{ tree: Array<{ path: string; type: string }> }>(
     token,
     `/repos/${owner}/${repo}/git/trees/${ref.object.sha}?recursive=1`,
   );
-  return tree.tree
-    .map((n) => ({
-      path: n.path,
-      type: (n.type === 'tree' ? 'dir' : 'file') as 'dir' | 'file',
-      documentable: n.type === 'blob' && DOCUMENTABLE.test(n.path),
-    }))
-    .filter((n) => n.type === 'dir' || n.documentable);
+  return {
+    tree: treeData.tree
+      .map((n) => ({
+        path: n.path,
+        type: (n.type === 'tree' ? 'dir' : 'file') as 'dir' | 'file',
+        documentable: n.type === 'blob' && DOCUMENTABLE.test(n.path),
+      }))
+      .filter((n) => n.type === 'dir' || n.documentable),
+    resolvedBranch,
+  };
 }
 
 export async function getFile(
@@ -135,6 +165,27 @@ export async function getFile(
       ? Buffer.from(data.content, 'base64').toString('utf8')
       : data.content;
   return { path, content, sha: data.sha };
+}
+
+/**
+ * Fetch the raw text content of a file by its blob SHA using the Git Blobs API.
+ * Unlike the Contents API, this endpoint accepts a blob SHA directly — which is
+ * exactly what we store in sourceBindings.commitSha.
+ */
+export async function getBlobContent(
+  token: string,
+  owner: string,
+  repo: string,
+  blobSha: string,
+): Promise<string> {
+  const data = await gh<{ content: string; encoding: string }>(
+    token,
+    `/repos/${owner}/${repo}/git/blobs/${blobSha}`,
+  );
+  if (data.encoding === 'base64') {
+    return Buffer.from(data.content.replace(/\n/g, ''), 'base64').toString('utf8');
+  }
+  return data.content;
 }
 
 export async function getFileSha(

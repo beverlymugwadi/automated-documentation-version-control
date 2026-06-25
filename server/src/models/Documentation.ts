@@ -17,6 +17,8 @@ const documentationSchema = new Schema(
           path: String,
           branch: String,
           commitSha: String,
+          /** sha256 of exported signatures at generation time — used for three-state drift. */
+          signatureHash: String,
         },
       ],
       default: [],

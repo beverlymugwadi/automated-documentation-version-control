@@ -1,5 +1,5 @@
 import { api } from './api';
-import type { SessionUser } from '../store/authStore';
+import type { SessionUser } from '../routes/store/authStore';
 
 interface AuthResponse {
   user: SessionUser;

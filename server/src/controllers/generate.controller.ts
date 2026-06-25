@@ -6,6 +6,8 @@ import { synthesize } from '../services/llmSynthesis';
 import { dataStore, type SourceBinding } from '../lib/dataStore';
 import { saveDocVersion } from '../services/versionService';
 import { authorFromReq } from '../lib/access';
+import { parseFile } from '../services/astParser';
+import { computeSignatureHash } from '../lib/signatureHash';
 
 export const generateSchema = z.object({
   projectId: z.string().optional(),
@@ -14,7 +16,12 @@ export const generateSchema = z.object({
   sourceRepo: z.string().optional(),
   files: z.array(z.object({ name: z.string(), content: z.string() })).default([]),
   bindings: z
-    .array(z.object({ repoFullName: z.string(), path: z.string(), branch: z.string(), commitSha: z.string() }))
+    .array(z.object({
+      repoFullName: z.string(),
+      path: z.string(),
+      branch: z.string(),
+      commitSha: z.string(),
+    }))
     .default([]),
 });
 
@@ -37,13 +44,30 @@ export const generate = asyncHandler(async (req: Request, res: Response) => {
     return;
   }
 
-  const docTitle = title?.trim() || project.projectName || 'Untitled Documentation';
+  const externalTitle = title?.trim() || project.projectName || 'Untitled Documentation';
 
-  const { markdown: ruleBasedMarkdown, structure } = compose({ title: docTitle, notes, files, sourceRepo });
-  const { llmMarkdown, llmAvailable, llmError } = await synthesize(structure, files);
+  const { markdown: ruleBasedMarkdown, structure } = compose({ title: externalTitle, notes, files, sourceRepo });
+  const { llmMarkdown, llmAvailable, llmError, derivedTitle } = await synthesize(structure, files);
+
+  // Prefer the content-derived title from the synthesis pass — it reflects what the code actually does.
+  // Fall back to the external label if the LLM pass didn't run or produced nothing.
+  const docTitle = derivedTitle || externalTitle;
 
   await dataStore.addNote(project.projectId, notes);
   if (files.length) await dataStore.addFiles(project.projectId, files);
+
+  // Build bindings with signatureHash — map each binding to a staged file by path.
+  const fileContentMap = new Map(files.map((f) => [f.name, f.content]));
+  const bindingsWithHash: SourceBinding[] = bindings.map((b) => {
+    const content = fileContentMap.get(b.path);
+    let signatureHash: string | undefined;
+    if (content) {
+      try {
+        signatureHash = computeSignatureHash(parseFile(b.path, content));
+      } catch { /* parse failed — store binding without hash */ }
+    }
+    return { ...b, signatureHash };
+  });
 
   const doc = await dataStore.createDoc({
     projectId: project.projectId,
@@ -51,11 +75,11 @@ export const generate = asyncHandler(async (req: Request, res: Response) => {
     title: docTitle,
     content: ruleBasedMarkdown,
     sourceRepo,
-    sourceBindings: bindings as SourceBinding[],
+    sourceBindings: bindingsWithHash,
   });
 
   await saveDocVersion(doc.docId, ruleBasedMarkdown, 'Initial generation', { source: 'generate', author });
 
   const generationMs = Date.now() - started;
-  res.status(201).json({ docId: doc.docId, ruleBasedMarkdown, llmMarkdown, llmAvailable, llmError, structure, generationMs });
+  res.status(201).json({ docId: doc.docId, ruleBasedMarkdown, llmMarkdown, llmAvailable, llmError, derivedTitle, structure, generationMs });
 });

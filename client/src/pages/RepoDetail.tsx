@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Plus, Check, Sparkles, FileCode2, X } from 'lucide-react';
 import { useTree, useFile } from '../lib/hooks/useGithub';
 import { fetchFile } from '../lib/github';
@@ -7,18 +7,28 @@ import { FileTree } from '../components/repo/FileTree';
 import { CodeBlock, langFromPath } from '../components/CodeBlock';
 import { Button, Badge } from '../components/ui';
 import { LoadingState, ErrorState, EmptyState } from '../components/states/States';
-import { useStagedStore } from '../store/stagedStore';
-import { toast } from '../store/toastStore';
+import { useStagedStore } from '../routes/store/stagedStore';
+import { toast } from '../routes/store/toastStore';
 
 export function RepoDetail() {
   const { owner = '', repo = '' } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const branch = 'main';
   const fullName = `${owner}/${repo}`;
 
+  // Use the branch hint from the URL (?branch=master) if present.
+  // The server always returns the actual resolved branch in the tree response,
+  // so this is just an optimistic starting value to avoid an extra round-trip.
+  const branchHint = searchParams.get('branch') ?? 'main';
+
   const [activePath, setActivePath] = useState<string | null>(null);
-  const treeQuery = useTree(owner, repo, branch);
-  const fileQuery = useFile(owner, repo, activePath, branch);
+  const treeQuery = useTree(owner, repo, branchHint);
+
+  // The server resolves the real branch (e.g. 'master' when 'main' was requested).
+  // All file operations must use this resolved branch, not the hint.
+  const resolvedBranch = treeQuery.data?.branch ?? branchHint;
+
+  const fileQuery = useFile(owner, repo, activePath, resolvedBranch);
 
   const staged = useStagedStore((s) => s.files);
   const addStaged = useStagedStore((s) => s.add);
@@ -30,8 +40,8 @@ export function RepoDetail() {
   async function stageFile(path: string) {
     const key = keyFor(path);
     if (stagedPaths.has(path)) { removeStaged(key); return; }
-    const { content, sha } = await fetchFile(owner, repo, path, branch);
-    addStaged({ key, name: path.split('/').pop() ?? path, path, repo: fullName, branch, sha, content });
+    const { content, sha } = await fetchFile(owner, repo, path, resolvedBranch);
+    addStaged({ key, name: path.split('/').pop() ?? path, path, repo: fullName, branch: resolvedBranch, sha, content });
     toast.success('Added to document', path.split('/').pop());
   }
 
@@ -42,7 +52,7 @@ export function RepoDetail() {
           <ArrowLeft size={16} />
         </Button>
         <h1 className="mono" style={{ fontSize: 'var(--text-lg)' }}>{fullName}</h1>
-        <Badge mono>{branch}</Badge>
+        <Badge mono>{resolvedBranch}</Badge>
       </div>
 
       {staged.length > 0 && (
@@ -72,7 +82,7 @@ export function RepoDetail() {
         <ErrorState desc="Could not load this repository's files." action={<Button onClick={() => treeQuery.refetch()}>Retry</Button>} />
       ) : (
         <div className="filebrowser">
-          <FileTree nodes={treeQuery.data ?? []} activePath={activePath} stagedPaths={stagedPaths} onSelect={setActivePath} />
+          <FileTree nodes={treeQuery.data?.tree ?? []} activePath={activePath} stagedPaths={stagedPaths} onSelect={setActivePath} />
           <div>
             {!activePath ? (
               <EmptyState icon={FileCode2} title="Select a file" desc="Choose a JavaScript or TypeScript file from the tree to preview it here." />
