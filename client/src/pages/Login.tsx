@@ -57,8 +57,10 @@ export function Login() {
 
     if (profileB64) {
       try {
-        // base64url → standard base64 → JSON
-        const json = atob(profileB64.replace(/-/g, '+').replace(/_/g, '/'));
+        // base64url → standard base64 (re-add padding, swap chars) → JSON
+        const padded = profileB64 + '=='.slice(0, (4 - profileB64.length % 4) % 4);
+        const b64 = padded.replace(/-/g, '+').replace(/_/g, '/');
+        const json = atob(b64);
         const user: SessionUser = JSON.parse(json);
         console.log('[Login] profile decoded — user:', user.email);
         setSession(token, user);
