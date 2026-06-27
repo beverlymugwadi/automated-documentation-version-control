@@ -30,9 +30,13 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error?.response?.status === 401) {
-      useAuthStore.getState().clearSession();
-    }
+    // Do NOT call clearSession() here on 401.
+    // The useAuth hook already does: if (meQuery.isError && token) clearSession()
+    // which only clears when a request fails for an account that was actually
+    // logged in.  Clearing unconditionally here creates a race condition on the
+    // GitHub OAuth handoff: the unauthenticated fetchMe() on Login mount fires
+    // a 401 and this interceptor used to wipe the Zustand state that setSession()
+    // had just written a few milliseconds earlier.
     return Promise.reject(error);
   },
 );
