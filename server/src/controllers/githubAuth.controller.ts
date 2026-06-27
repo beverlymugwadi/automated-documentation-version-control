@@ -10,10 +10,6 @@ import { HttpError } from '../middleware/errorHandler';
 
 const STATE_COOKIE = 'gh_oauth_state';
 
-function issueSession(res: Response, userId: string): void {
-  res.cookie(AUTH_COOKIE, signToken(userId), authCookieOptions());
-}
-
 export const githubStart = asyncHandler(async (req: Request, res: Response) => {
   if (!env.githubConfigured) {
     throw new HttpError(501, 'GitHub OAuth is not configured on this server.');
@@ -141,7 +137,11 @@ export const githubCallback = asyncHandler(async (req: Request, res: Response) =
   // when frontend and backend are on different origins, because SameSite=Lax cookies
   // are not sent on cross-origin XHR requests, so the cookie alone is invisible to
   // subsequent API calls made by the browser.
-  res.redirect(`${env.clientUrl}/auth/callback?token=${encodeURIComponent(token)}`);
+  // Redirect to /login with the token as a query param.
+  // /login is a guaranteed-deployed public route, so no routing issues.
+  // The Login page detects ?github_token= and calls setSession() exactly
+  // as email/password login does.
+  res.redirect(`${env.clientUrl}/login?github_token=${encodeURIComponent(token)}`);
 });
 
 export const githubDisconnect = asyncHandler(async (req: Request, res: Response) => {

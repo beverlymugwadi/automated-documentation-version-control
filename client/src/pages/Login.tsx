@@ -1,17 +1,22 @@
-import { useState, type FormEvent } from 'react';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
-// useLocation kept for `from` redirect state
-import { Github, Mail, Lock, AlertTriangle } from 'lucide-react';
+import { useState, useEffect, type FormEvent } from 'react';
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { Github, Mail, Lock, AlertTriangle, Loader2 } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
 import { AuthLayout } from '../components/auth/AuthLayout';
 import { Button, Input, Divider } from '../components/ui';
 import { GitHubConnectModal } from '../components/GitHubConnectModal';
 import { useAuth } from '../lib/hooks/useAuth';
+import { useAuthStore, type SessionUser } from '../routes/store/authStore';
+import { api } from '../lib/api';
 import { parseAuthError } from '../lib/auth';
 
 export function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const qc = useQueryClient();
+  const setSession = useAuthStore((s) => s.setSession);
   const from = (location.state as { from?: string } | null)?.from ?? '/dashboard';
 
   const [email, setEmail] = useState('');
@@ -20,6 +25,34 @@ export function Login() {
   const [formError, setFormError] = useState('');
   const [loading, setLoading] = useState(false);
   const [ghModal, setGhModal] = useState(false);
+  const [githubLoading, setGithubLoading] = useState(false);
+
+  // GitHub OAuth token-handoff — the server redirects here with ?github_token=<jwt>
+  // after a successful OAuth round-trip.  We store the token exactly like
+  // email/password login does so the rest of the app sees an authenticated session.
+  useEffect(() => {
+    const token = searchParams.get('github_token');
+    if (!token) return;
+
+    setGithubLoading(true);
+    // Clean the token out of the URL immediately so it doesn't linger in history.
+    window.history.replaceState({}, '', '/login');
+
+    api
+      .get<{ user: SessionUser }>('/auth/me', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then(({ data }) => {
+        setSession(token, data.user);
+        qc.setQueryData(['me'], data.user);
+        navigate('/dashboard', { replace: true });
+      })
+      .catch(() => {
+        setGithubLoading(false);
+        setFormError('GitHub sign-in failed. Please try again.');
+      });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -37,6 +70,18 @@ export function Login() {
       setFields(parsed.fields ?? {});
       if (!parsed.fields) setFormError(parsed.message);
     } finally { setLoading(false); }
+  }
+
+  // Show a spinner while the GitHub token is being exchanged.
+  if (githubLoading) {
+    return (
+      <AuthLayout>
+        <div style={{ display: 'grid', placeItems: 'center', minHeight: 200, gap: 'var(--sp-3)' }}>
+          <Loader2 size={24} className="spin muted" />
+          <p className="muted">Signing you in with GitHub…</p>
+        </div>
+      </AuthLayout>
+    );
   }
 
   return (
