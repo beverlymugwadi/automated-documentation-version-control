@@ -7,7 +7,6 @@ import { Button, Input, Divider } from '../components/ui';
 import { GitHubConnectModal } from '../components/GitHubConnectModal';
 import { useAuth } from '../lib/hooks/useAuth';
 import { useAuthStore, type SessionUser } from '../routes/store/authStore';
-import { api } from '../lib/api';
 import { parseAuthError } from '../lib/auth';
 
 export function Login() {
@@ -25,32 +24,27 @@ export function Login() {
   const [formError, setFormError] = useState('');
   const [loading, setLoading] = useState(false);
   const [ghModal, setGhModal] = useState(false);
-  const [githubLoading, setGithubLoading] = useState(false);
+  const [githubLoading] = useState(false);
 
-  // GitHub OAuth token-handoff — the server redirects here with ?github_token=<jwt>
-  // after a successful OAuth round-trip.  We store the token exactly like
-  // email/password login does so the rest of the app sees an authenticated session.
+  // GitHub OAuth token-handoff.
+  // Server redirects here with ?github_token=<jwt>&github_user=<json>.
+  // We call setSession() immediately — no extra network call needed.
   useEffect(() => {
     const token = searchParams.get('github_token');
-    if (!token) return;
+    const userRaw = searchParams.get('github_user');
+    if (!token || !userRaw) return;
 
-    setGithubLoading(true);
-    // Clean the token out of the URL immediately so it doesn't linger in history.
+    // Clean the params from the URL immediately.
     window.history.replaceState({}, '', '/login');
 
-    api
-      .get<{ user: SessionUser }>('/auth/me', {
-        headers: { Authorization: `Bearer ${token}` },
-      })
-      .then(({ data }) => {
-        setSession(token, data.user);
-        qc.setQueryData(['me'], data.user);
-        navigate('/dashboard', { replace: true });
-      })
-      .catch(() => {
-        setGithubLoading(false);
-        setFormError('GitHub sign-in failed. Please try again.');
-      });
+    try {
+      const user: SessionUser = JSON.parse(decodeURIComponent(userRaw));
+      setSession(token, user);
+      qc.setQueryData(['me'], user);
+      navigate('/dashboard', { replace: true });
+    } catch {
+      setFormError('GitHub sign-in failed. Please try again.');
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
