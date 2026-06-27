@@ -137,18 +137,7 @@ export const githubCallback = asyncHandler(async (req: Request, res: Response) =
   // when frontend and backend are on different origins, because SameSite=Lax cookies
   // are not sent on cross-origin XHR requests, so the cookie alone is invisible to
   // subsequent API calls made by the browser.
-  // Include the user payload alongside the token so the frontend can call
-  // setSession() immediately — no extra /api/auth/me round-trip, no CORS risk.
-  const clientUser = {
-    userId: user.userId,
-    fullName: user.fullName,
-    email: user.email,
-    githubLogin: user.githubLogin ?? null,
-    avatarUrl: user.avatarUrl ?? null,
-    createdAt: user.createdAt instanceof Date ? user.createdAt.toISOString() : String(user.createdAt),
-  };
-  const userParam = encodeURIComponent(JSON.stringify(clientUser));
-  res.redirect(`${env.clientUrl}/login?github_token=${encodeURIComponent(token)}&github_user=${userParam}`);
+  res.redirect(`${env.clientUrl}/login?github_token=${encodeURIComponent(token)}`);
 });
 
 export const githubDisconnect = asyncHandler(async (req: Request, res: Response) => {

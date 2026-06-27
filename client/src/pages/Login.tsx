@@ -7,6 +7,7 @@ import { Button, Input, Divider } from '../components/ui';
 import { GitHubConnectModal } from '../components/GitHubConnectModal';
 import { useAuth } from '../lib/hooks/useAuth';
 import { useAuthStore, type SessionUser } from '../routes/store/authStore';
+import { api } from '../lib/api';
 import { parseAuthError } from '../lib/auth';
 
 export function Login() {
@@ -24,27 +25,40 @@ export function Login() {
   const [formError, setFormError] = useState('');
   const [loading, setLoading] = useState(false);
   const [ghModal, setGhModal] = useState(false);
-  const [githubLoading] = useState(false);
+  const [githubLoading, setGithubLoading] = useState(false);
 
-  // GitHub OAuth token-handoff.
-  // Server redirects here with ?github_token=<jwt>&github_user=<json>.
-  // We call setSession() immediately — no extra network call needed.
+  // ── GitHub OAuth token-handoff ────────────────────────────────────────────
+  // The server redirects here with ?github_token=<jwt> after a successful
+  // OAuth round-trip.  We read the token, verify it against /api/auth/me
+  // (which hydrates the full user object), then store it exactly the same way
+  // email/password login does (Zustand → localStorage via persist middleware).
   useEffect(() => {
     const token = searchParams.get('github_token');
-    const userRaw = searchParams.get('github_user');
-    if (!token || !userRaw) return;
+    if (!token) return;
 
-    // Clean the params from the URL immediately.
+    // Remove the token from the URL immediately so it doesn't linger in history.
     window.history.replaceState({}, '', '/login');
 
-    try {
-      const user: SessionUser = JSON.parse(decodeURIComponent(userRaw));
-      setSession(token, user);
-      qc.setQueryData(['me'], user);
-      navigate('/dashboard', { replace: true });
-    } catch {
-      setFormError('GitHub sign-in failed. Please try again.');
-    }
+    setGithubLoading(true);
+
+    // Call /auth/me with the token in the Authorization header.
+    // This avoids the SameSite=Lax cookie issue on cross-origin requests.
+    api
+      .get<{ user: SessionUser }>('/auth/me', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+      .then(({ data }) => {
+        // setSession writes to Zustand (persisted to localStorage).
+        // This is the SAME call email/password login makes.
+        setSession(token, data.user);
+        // Pre-populate the React Query cache so ProtectedRoute renders instantly.
+        qc.setQueryData(['me'], data.user);
+        navigate('/dashboard', { replace: true });
+      })
+      .catch(() => {
+        setGithubLoading(false);
+        setFormError('GitHub sign-in failed — the session may have expired. Please try again.');
+      });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -70,7 +84,7 @@ export function Login() {
   if (githubLoading) {
     return (
       <AuthLayout>
-        <div style={{ display: 'grid', placeItems: 'center', minHeight: 200, gap: 'var(--sp-3)' }}>
+        <div style={{ display: 'grid', placeItems: 'center', minHeight: 240, gap: 'var(--sp-3)' }}>
           <Loader2 size={24} className="spin muted" />
           <p className="muted">Signing you in with GitHub…</p>
         </div>
