@@ -128,16 +128,31 @@ export const githubCallback = asyncHandler(async (req: Request, res: Response) =
 
   console.log(`[githubCallback] action=${action} userId=${user.userId} → issuing session`);
 
-  // Set the httpOnly cookie (used when frontend and backend share the same origin).
   const token = signToken(user.userId);
   res.cookie(AUTH_COOKIE, token, authCookieOptions());
 
-  // Pass the JWT in the redirect URL so the frontend can store it in Zustand
-  // (localStorage) exactly like the email/password login does.  This is necessary
-  // when frontend and backend are on different origins, because SameSite=Lax cookies
-  // are not sent on cross-origin XHR requests, so the cookie alone is invisible to
-  // subsequent API calls made by the browser.
-  res.redirect(`${env.clientUrl}/login?github_token=${encodeURIComponent(token)}`);
+  // Embed the user profile alongside the JWT so the frontend can call setSession()
+  // immediately — NO cross-origin /api/auth/me request needed.
+  // Cross-origin requests (frontend and backend on different Render subdomains) require
+  // a CORS preflight for the Authorization header, which has proven unreliable. Embedding
+  // the profile eliminates that round-trip entirely.
+  const profile = {
+    userId: user.userId,
+    fullName: user.fullName,
+    email: user.email,
+    githubLogin: user.githubLogin ?? null,
+    avatarUrl: user.avatarUrl ?? null,
+    createdAt: user.createdAt instanceof Date
+      ? user.createdAt.toISOString()
+      : String(user.createdAt),
+  };
+  // Base64url-encode the JSON so it survives URL-encoding cleanly
+  const profileB64 = Buffer.from(JSON.stringify(profile)).toString('base64url');
+
+  console.log(`[githubCallback] redirecting with token + profile (userId=${user.userId})`);
+  res.redirect(
+    `${env.clientUrl}/login?github_token=${encodeURIComponent(token)}&u=${profileB64}`,
+  );
 });
 
 export const githubDisconnect = asyncHandler(async (req: Request, res: Response) => {

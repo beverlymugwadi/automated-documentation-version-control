@@ -26,7 +26,7 @@ export function Login() {
   const [formError, setFormError] = useState('');
   const [loading, setLoading] = useState(false);
   const [ghModal, setGhModal] = useState(false);
-  const [githubLoading, setGithubLoading] = useState(false);
+  const [githubLoading] = useState(false);
 
   // ── GitHub OAuth token-handoff ─────────────────────────────────────────
   // The server redirects to /login?github_token=<jwt>.
@@ -50,47 +50,33 @@ export function Login() {
     window.history.replaceState({}, '', '/login');
     console.log('[Login] token stripped from URL');
 
-    // Clear any stale Zustand session so the axios interceptor has nothing to
-    // override — the explicit Authorization header below must survive intact.
-    useAuthStore.getState().clearSession();
-    console.log('[Login] stale session cleared; sending github_token as Bearer');
+    // The server embeds the user profile as ?u=<base64url(json)> so we can call
+    // setSession() immediately — zero cross-origin HTTP requests, zero CORS preflight.
+    const profileB64 = params.get('u');
+    console.log('[Login] profile param present:', !!profileB64);
 
-    setGithubLoading(true);
-
-    // Verify the token and hydrate the user.
-    // Using native fetch (not the axios `api` instance) so no interceptor can
-    // modify or strip the Authorization header.
-    const apiBase = (import.meta.env.VITE_API_URL as string | undefined) ?? '/api';
-    console.log('[Login] calling', apiBase + '/auth/me', 'with Bearer token (len:', token.length, ')');
-
-    fetch(`${apiBase}/auth/me`, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      credentials: 'include',
-    })
-      .then(async (res) => {
-        console.log('[Login] /auth/me status:', res.status);
-        if (!res.ok) {
-          const body = await res.text().catch(() => '');
-          throw new Error(`${res.status}: ${body}`);
-        }
-        return res.json() as Promise<{ user: SessionUser }>;
-      })
-      .then(({ user }) => {
-        console.log('[Login] /auth/me succeeded — user:', user?.email);
+    if (profileB64) {
+      try {
+        // base64url → standard base64 → JSON
+        const json = atob(profileB64.replace(/-/g, '+').replace(/_/g, '/'));
+        const user: SessionUser = JSON.parse(json);
+        console.log('[Login] profile decoded — user:', user.email);
         setSession(token, user);
         qc.setQueryData(['me'], user);
         console.log('[Login] session stored — navigating to /dashboard');
         navigate('/dashboard', { replace: true });
-      })
-      .catch((err) => {
-        console.error('[Login] /auth/me failed:', String(err));
-        setGithubLoading(false);
-        setFormError('GitHub sign-in failed — the link may have expired. Please try again.');
-      });
+        return;
+      } catch (err) {
+        console.error('[Login] profile decode failed:', String(err));
+        // Fall through to the error state — don't attempt a cross-origin call
+        setFormError('GitHub sign-in failed — could not read profile. Please try again.');
+        return;
+      }
+    }
+
+    // No profile embedded (old backend or unexpected redirect) — show error.
+    console.warn('[Login] no profile param — cannot complete handoff without cross-origin call');
+    setFormError('GitHub sign-in failed. Please try again.');
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
