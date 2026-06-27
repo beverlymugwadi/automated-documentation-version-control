@@ -7,7 +7,6 @@ import { Button, Input, Divider } from '../components/ui';
 import { GitHubConnectModal } from '../components/GitHubConnectModal';
 import { useAuth } from '../lib/hooks/useAuth';
 import { useAuthStore, type SessionUser } from '../routes/store/authStore';
-import { api } from '../lib/api';
 import { parseAuthError } from '../lib/auth';
 
 export function Login() {
@@ -58,25 +57,37 @@ export function Login() {
 
     setGithubLoading(true);
 
-    // Verify the token and hydrate the user by calling /api/auth/me.
-    // The explicit Authorization header here will NOT be overwritten by the
-    // interceptor because (a) we just cleared Zustand and (b) the interceptor
-    // now skips headers already set on the request config.
-    console.log('[Login] /auth/me request — Authorization: Bearer', token.slice(0, 20) + '…');
-    api
-      .get<{ user: SessionUser }>('/auth/me', {
-        headers: { Authorization: `Bearer ${token}` },
+    // Verify the token and hydrate the user.
+    // Using native fetch (not the axios `api` instance) so no interceptor can
+    // modify or strip the Authorization header.
+    const apiBase = (import.meta.env.VITE_API_URL as string | undefined) ?? '/api';
+    console.log('[Login] calling', apiBase + '/auth/me', 'with Bearer token (len:', token.length, ')');
+
+    fetch(`${apiBase}/auth/me`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+    })
+      .then(async (res) => {
+        console.log('[Login] /auth/me status:', res.status);
+        if (!res.ok) {
+          const body = await res.text().catch(() => '');
+          throw new Error(`${res.status}: ${body}`);
+        }
+        return res.json() as Promise<{ user: SessionUser }>;
       })
-      .then(({ data }) => {
-        console.log('[Login] /auth/me succeeded — user:', data.user?.email);
-        // Store exactly as email/password login does: Zustand → localStorage.
-        setSession(token, data.user);
-        qc.setQueryData(['me'], data.user);
+      .then(({ user }) => {
+        console.log('[Login] /auth/me succeeded — user:', user?.email);
+        setSession(token, user);
+        qc.setQueryData(['me'], user);
         console.log('[Login] session stored — navigating to /dashboard');
         navigate('/dashboard', { replace: true });
       })
       .catch((err) => {
-        console.error('[Login] /auth/me failed:', err?.response?.status, err?.message);
+        console.error('[Login] /auth/me failed:', String(err));
         setGithubLoading(false);
         setFormError('GitHub sign-in failed — the link may have expired. Please try again.');
       });

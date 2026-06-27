@@ -10,7 +10,15 @@ export function createApp(): Express {
   const app = express();
 
   app.use(helmet());
-  app.use(cors({ origin: env.clientUrl, credentials: true }));
+  app.use(cors({
+    origin: env.clientUrl,
+    credentials: true,
+    // Explicitly allow Authorization so CORS preflight passes when the frontend
+    // sends a Bearer token in the Authorization header (required for cross-origin
+    // requests — without this the browser blocks the request before it arrives).
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  }));
   app.use(express.json());
   app.use(cookieParser());
 
