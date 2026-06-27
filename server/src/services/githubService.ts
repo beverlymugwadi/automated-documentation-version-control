@@ -31,6 +31,7 @@ async function gh<T>(token: string, path: string): Promise<T> {
       Authorization: `Bearer ${token}`,
       Accept: 'application/vnd.github+json',
       'X-GitHub-Api-Version': '2022-11-28',
+      'User-Agent': 'ADGVC/1.0',
     },
   });
   if (!res.ok) {

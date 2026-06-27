@@ -21,14 +21,21 @@ export const githubStart = asyncHandler(async (req: Request, res: Response) => {
 
   const nonce = crypto.randomBytes(16).toString('hex');
 
-  // If a user is already logged in to ADGVC, embed their ID in the state so
-  // the callback links GitHub to their existing account instead of creating
-  // a new one based on email.
+  // If a valid, EXISTING user is logged in, embed their ID so the callback
+  // links GitHub to their account rather than creating a new one.
+  // We verify the token AND confirm the user exists — a stale JWT for a deleted
+  // user must not set linkUserId or it causes a spurious "not found" error.
   let linkUserId = '';
   const authCookie = (req.cookies as Record<string, string>)[AUTH_COOKIE];
   if (authCookie) {
-    try { linkUserId = verifyToken(authCookie).sub; } catch { /* not logged in */ }
+    try {
+      const { sub } = verifyToken(authCookie);
+      const existing = await userStore.findById(sub);
+      if (existing) linkUserId = sub;
+    } catch { /* not logged in or invalid token */ }
   }
+
+  console.log(`[githubStart] linkUserId=${linkUserId || '(none — standalone login)'}`);
 
   const state = Buffer.from(JSON.stringify({ nonce, linkUserId })).toString('base64url');
   res.cookie(STATE_COOKIE, nonce, { httpOnly: true, sameSite: 'lax', maxAge: 600_000 });
@@ -61,33 +68,69 @@ export const githubCallback = asyncHandler(async (req: Request, res: Response) =
   }
   res.clearCookie(STATE_COOKIE);
 
+  // Exchange the code for a GitHub access token and fetch the profile + email.
   const gh = await exchangeCodeForUser(code);
+  console.log(`[githubCallback] GitHub profile received: login=${gh.login} id=${gh.githubId} email=${gh.email ?? '(none)'}`);
 
   let user;
+  let action: 'linked' | 'found-by-github-id' | 'found-by-email' | 'created' = 'created';
+
   if (linkUserId) {
-    // User was already logged in to ADGVC — link the GitHub account they just
-    // authorized to their existing ADGVC account.
+    // The user was already logged in to ADGVC and wants to link their GitHub account.
     user = await userStore.findById(linkUserId);
-    if (!user) throw new HttpError(404, 'ADGVC account not found.');
-  } else {
-    // Standalone GitHub login — find an existing account by GitHub ID first,
-    // then fall back to email, then create a new account.
-    user = await userStore.findByGithubId(gh.githubId);
-    if (!user && gh.email) {
-      user = await userStore.findByEmail(gh.email);
-    }
-    if (!user) {
-      const email = gh.email ?? `${gh.login}@users.noreply.github.com`;
-      user = await userStore.create({ fullName: gh.name ?? gh.login, email, passwordHash: '' });
+    if (user) {
+      action = 'linked';
+      console.log(`[githubCallback] Linking GitHub to existing account userId=${linkUserId}`);
+    } else {
+      // Stale cookie — the userId no longer exists in the database (e.g. user was
+      // deleted, or cookie is from a different environment). Fall through to the
+      // standalone find-or-create path below instead of throwing.
+      console.warn(`[githubCallback] linkUserId=${linkUserId} not found in DB — falling back to standalone login`);
     }
   }
 
+  if (!user) {
+    // ── Find-or-create (standalone GitHub login) ──────────────────────────
+    // Step 1: Look up by GitHub ID (most precise — survives email changes).
+    user = await userStore.findByGithubId(gh.githubId);
+    if (user) {
+      action = 'found-by-github-id';
+      console.log(`[githubCallback] Found existing user by githubId: userId=${user.userId}`);
+    }
+
+    // Step 2: Look up by primary email (links GitHub to an existing email/password account).
+    if (!user && gh.email) {
+      user = await userStore.findByEmail(gh.email);
+      if (user) {
+        action = 'found-by-email';
+        console.log(`[githubCallback] Found existing user by email: userId=${user.userId} email=${gh.email}`);
+      }
+    }
+
+    // Step 3: Create a brand-new account from the GitHub profile.
+    if (!user) {
+      // Use the GitHub primary email when available; fall back to the GitHub-provided
+      // noreply address for accounts that keep email private.
+      const email = gh.email ?? `${gh.login}@users.noreply.github.com`;
+      action = 'created';
+      console.log(`[githubCallback] Creating new user: login=${gh.login} email=${email}`);
+      user = await userStore.create({
+        fullName: gh.name ?? gh.login,
+        email,
+        passwordHash: '', // OAuth accounts have no password
+      });
+    }
+  }
+
+  // Store / update the GitHub credentials on the user record.
   await userStore.linkGithub(user.userId, {
     githubId: gh.githubId,
     githubLogin: gh.login,
     avatarUrl: gh.avatarUrl,
     encryptedToken: encryptSecret(gh.accessToken),
   });
+
+  console.log(`[githubCallback] action=${action} userId=${user.userId} → issuing session`);
 
   issueSession(res, user.userId);
   res.redirect(`${env.clientUrl}/dashboard`);
