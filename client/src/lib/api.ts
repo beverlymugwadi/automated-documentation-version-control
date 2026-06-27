@@ -12,8 +12,17 @@ export function getToken(): string | null {
 
 api.interceptors.request.use((config) => {
   const { token } = useAuthStore.getState();
-  if (token) {
+  // Only set Authorization when the request hasn't already provided one.
+  // Explicit per-request headers (e.g. the GitHub OAuth handoff passing a
+  // fresh JWT before it's in Zustand yet) must NOT be overwritten by a
+  // stale token sitting in localStorage from a previous session.
+  if (token && !config.headers.Authorization) {
     config.headers.Authorization = `Bearer ${token}`;
+    console.log('[api] interceptor: attached token from store (len:', token.length, ')');
+  } else if (config.headers.Authorization) {
+    console.log('[api] interceptor: explicit Authorization present — not overwriting');
+  } else {
+    console.log('[api] interceptor: no token — request will be unauthenticated');
   }
   return config;
 });

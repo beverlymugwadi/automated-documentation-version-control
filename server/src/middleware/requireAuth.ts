@@ -10,21 +10,21 @@ export const requireAuth = asyncHandler(async (req: Request, _res: Response, nex
   const fromHeader = header?.startsWith('Bearer ') ? header.slice(7) : undefined;
 
   // Prefer the explicit Authorization header over the cookie.
-  // The frontend always sends a Bearer token (from Zustand) when logged in.
-  // The cookie may be stale (expired, or signed with a different JWT_SECRET
-  // after a re-deploy) and would shadow a perfectly valid Bearer token if
-  // given priority.  Falling back to the cookie handles edge cases where no
-  // Bearer is present (e.g. direct link with only a browser cookie active).
   const token = fromHeader || fromCookie;
 
+  console.log(`[requireAuth] ${req.method} ${req.path} — header:${fromHeader ? 'yes' : 'NO'} cookie:${fromCookie ? 'yes' : 'NO'} using:${fromHeader ? 'header' : fromCookie ? 'cookie' : 'NONE'}`);
+
   if (!token) {
+    console.log('[requireAuth] 401 — no token at all');
     throw new HttpError(401, 'Authentication required.');
   }
 
   let userId: string;
   try {
     userId = verifyToken(token).sub;
-  } catch {
+    console.log(`[requireAuth] token verified — userId=${userId}`);
+  } catch (err) {
+    console.log('[requireAuth] 401 — token verification failed:', (err as Error).message);
     throw new HttpError(401, 'Your session has expired. Please sign in again.');
   }
 

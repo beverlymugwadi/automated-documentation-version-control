@@ -51,10 +51,18 @@ export function Login() {
     window.history.replaceState({}, '', '/login');
     console.log('[Login] token stripped from URL');
 
+    // Clear any stale Zustand session so the axios interceptor has nothing to
+    // override — the explicit Authorization header below must survive intact.
+    useAuthStore.getState().clearSession();
+    console.log('[Login] stale session cleared; sending github_token as Bearer');
+
     setGithubLoading(true);
 
-    // Verify the token and hydrate the user by calling /api/auth/me with the
-    // token in the Authorization header (avoids SameSite=Lax cookie issue).
+    // Verify the token and hydrate the user by calling /api/auth/me.
+    // The explicit Authorization header here will NOT be overwritten by the
+    // interceptor because (a) we just cleared Zustand and (b) the interceptor
+    // now skips headers already set on the request config.
+    console.log('[Login] /auth/me request — Authorization: Bearer', token.slice(0, 20) + '…');
     api
       .get<{ user: SessionUser }>('/auth/me', {
         headers: { Authorization: `Bearer ${token}` },
