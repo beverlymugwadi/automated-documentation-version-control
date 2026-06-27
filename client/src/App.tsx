@@ -14,7 +14,6 @@ import { DocWorkspace } from './pages/DocWorkspace';
 import { Projects } from './pages/Projects';
 import { ProjectDetail } from './pages/ProjectDetail';
 import { Account } from './pages/Account';
-import { AuthCallback } from './pages/AuthCallback';
 
 function Root() {
   const { isAuthenticated } = useAuth();
@@ -28,8 +27,8 @@ export default function App() {
         <Route path="/" element={<Root />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        {/* GitHub OAuth token-handoff — must be public (no ProtectedRoute wrapper) */}
-        <Route path="/auth/callback" element={<AuthCallback />} />
+        {/* GitHub OAuth token-handoff is handled directly in the Login component
+            by detecting ?github_token= in the URL on mount. No separate route needed. */}
 
         <Route
           element={

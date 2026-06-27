@@ -1,5 +1,5 @@
 import { useState, useEffect, type FormEvent } from 'react';
-import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Github, Mail, Lock, AlertTriangle, Loader2 } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { AuthLayout } from '../components/auth/AuthLayout';
@@ -11,10 +11,12 @@ import { api } from '../lib/api';
 import { parseAuthError } from '../lib/auth';
 
 export function Login() {
+  // ── diagnostic: confirm this component renders ──────────────────────────
+  console.log('[Login] RENDER — window.location.search:', window.location.search);
+
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [searchParams] = useSearchParams();
   const qc = useQueryClient();
   const setSession = useAuthStore((s) => s.setSession);
   const from = (location.state as { from?: string } | null)?.from ?? '/dashboard';
@@ -27,39 +29,51 @@ export function Login() {
   const [ghModal, setGhModal] = useState(false);
   const [githubLoading, setGithubLoading] = useState(false);
 
-  // ── GitHub OAuth token-handoff ────────────────────────────────────────────
-  // The server redirects here with ?github_token=<jwt> after a successful
-  // OAuth round-trip.  We read the token, verify it against /api/auth/me
-  // (which hydrates the full user object), then store it exactly the same way
-  // email/password login does (Zustand → localStorage via persist middleware).
+  // ── GitHub OAuth token-handoff ─────────────────────────────────────────
+  // The server redirects to /login?github_token=<jwt>.
+  // We read the token from window.location.search (not useSearchParams) to
+  // avoid React Router sync timing issues on server-issued 302 redirects.
   useEffect(() => {
-    const token = searchParams.get('github_token');
-    if (!token) return;
+    // Read directly from the real URL — always current, bypasses React Router.
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('github_token');
 
-    // Remove the token from the URL immediately so it doesn't linger in history.
+    console.log('[Login] useEffect mount');
+    console.log('[Login] window.location.search:', window.location.search);
+    console.log('[Login] github_token found:', token ? `yes (${token.slice(0, 20)}…)` : 'NO');
+
+    if (!token) {
+      console.log('[Login] no github_token — showing normal login form');
+      return;
+    }
+
+    // Strip the token from the URL immediately so it doesn't linger in history.
     window.history.replaceState({}, '', '/login');
+    console.log('[Login] token stripped from URL');
 
     setGithubLoading(true);
 
-    // Call /auth/me with the token in the Authorization header.
-    // This avoids the SameSite=Lax cookie issue on cross-origin requests.
+    // Verify the token and hydrate the user by calling /api/auth/me with the
+    // token in the Authorization header (avoids SameSite=Lax cookie issue).
     api
       .get<{ user: SessionUser }>('/auth/me', {
         headers: { Authorization: `Bearer ${token}` },
       })
       .then(({ data }) => {
-        // setSession writes to Zustand (persisted to localStorage).
-        // This is the SAME call email/password login makes.
+        console.log('[Login] /auth/me succeeded — user:', data.user?.email);
+        // Store exactly as email/password login does: Zustand → localStorage.
         setSession(token, data.user);
-        // Pre-populate the React Query cache so ProtectedRoute renders instantly.
         qc.setQueryData(['me'], data.user);
+        console.log('[Login] session stored — navigating to /dashboard');
         navigate('/dashboard', { replace: true });
       })
-      .catch(() => {
+      .catch((err) => {
+        console.error('[Login] /auth/me failed:', err?.response?.status, err?.message);
         setGithubLoading(false);
-        setFormError('GitHub sign-in failed — the session may have expired. Please try again.');
+        setFormError('GitHub sign-in failed — the link may have expired. Please try again.');
       });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function onSubmit(e: FormEvent) {
@@ -80,7 +94,6 @@ export function Login() {
     } finally { setLoading(false); }
   }
 
-  // Show a spinner while the GitHub token is being exchanged.
   if (githubLoading) {
     return (
       <AuthLayout>
