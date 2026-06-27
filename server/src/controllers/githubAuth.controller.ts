@@ -132,8 +132,16 @@ export const githubCallback = asyncHandler(async (req: Request, res: Response) =
 
   console.log(`[githubCallback] action=${action} userId=${user.userId} → issuing session`);
 
-  issueSession(res, user.userId);
-  res.redirect(`${env.clientUrl}/dashboard`);
+  // Set the httpOnly cookie (used when frontend and backend share the same origin).
+  const token = signToken(user.userId);
+  res.cookie(AUTH_COOKIE, token, authCookieOptions());
+
+  // Pass the JWT in the redirect URL so the frontend can store it in Zustand
+  // (localStorage) exactly like the email/password login does.  This is necessary
+  // when frontend and backend are on different origins, because SameSite=Lax cookies
+  // are not sent on cross-origin XHR requests, so the cookie alone is invisible to
+  // subsequent API calls made by the browser.
+  res.redirect(`${env.clientUrl}/auth/callback?token=${encodeURIComponent(token)}`);
 });
 
 export const githubDisconnect = asyncHandler(async (req: Request, res: Response) => {
