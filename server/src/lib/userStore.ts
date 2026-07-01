@@ -63,7 +63,8 @@ class MongoUserStore implements UserStore {
   }
 
   async findByLogin(login: string): Promise<StoredUser | null> {
-    const doc = await User.findOne({ githubLogin: login });
+    const escaped = login.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const doc = await User.findOne({ githubLogin: new RegExp(`^${escaped}$`, 'i') });
     return doc ? this.map(doc) : null;
   }
 

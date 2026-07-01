@@ -37,7 +37,8 @@ describe('noteEngine', () => {
     const result = processNotes(notes);
     const usage = result.sections.find((s) => s.id === 'usage');
     expect(usage).toBeTruthy();
-    expect(usage?.blocks.some((b) => b.code && b.text.includes('add(1, 2)'))).toBe(true);
+    expect(usage?.blocks.some((b) =>
+    b.code && b.text.includes('add(1, 2)'))).toBe(true);
   });
 
   it('handles empty input', () => {

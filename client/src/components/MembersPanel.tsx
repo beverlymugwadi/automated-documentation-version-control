@@ -20,7 +20,8 @@ export function MembersPanel({ projectId, members, role, onChange }: {
       onChange(next); setIdentifier(''); setShowAdd(false);
       toast.success('Collaborator added');
     } catch (err) {
-      toast.error('Could not add', (err as any)?.response?.data?.error?.message);
+      const reason = (err as any)?.response?.data?.error?.message ?? 'User not found. They must sign in to ADGVC first.';
+      toast.error('Could not add collaborator', reason);
     } finally { setAdding(false); }
   }
 
