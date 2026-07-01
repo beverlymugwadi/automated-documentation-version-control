@@ -1,106 +1,253 @@
 # ADGVC — Automated Documentation Generator with Version Control
 
-ADGVC is a full-stack web application that helps software developers automatically generate structured documentation from unstructured notes or GitHub source code. It eliminates the need to write documentation manually by using a rule-based engine and an AST parser to extract and organise information from code. Every generated document is saved as a version, allowing developers to compare changes, roll back to previous versions, and collaborate with team members through role-based access control.
+> A web application that automatically generates structured technical documentation from developer notes and source code, with full version control, drift detection, and multi-format export.
 
-**Live App:** https://automated-documentation-generator-with-of94.onrender.com
+**BSc Software Engineering Capstone · African Leadership University · Beverly Tashinga Mugwadi**
 
-> Note: The app is hosted on Render's free tier. It may take 30–60 seconds to load on first visit while the server wakes up.
+[![Live App](https://img.shields.io/badge/Live%20App-Render-brightgreen)](https://automated-documentation-generator-with-of94.onrender.com)
+[![Tests](https://img.shields.io/badge/Tests-83%2F83%20passing-brightgreen)](#testing-results)
+[![Stack](https://img.shields.io/badge/Stack-React%20%7C%20Node.js%20%7C%20MongoDB-blue)](#tech-stack)
 
-**Demo Video:** [Watch the 5-minute demo here](#) ← replace with your Loom/YouTube link before submitting
+---
+
+## Live Demo & Video
+
+| | |
+|---|---|
+| **Live App** | https://automated-documentation-generator-with-of94.onrender.com |
+| **Demo Video** | [▶ Watch the technical walkthrough](#) ← **ADD YOUR LOOM/YOUTUBE LINK HERE BEFORE SUBMITTING** |
+
+> The app runs on Render's free tier — allow 30–60 seconds on first load.
+
+---
+
+## Table of Contents
+
+1. [Project Overview](#project-overview)
+2. [Features](#features)
+3. [Screenshots](#screenshots)
+4. [Tech Stack](#tech-stack)
+5. [Project Structure](#project-structure)
+6. [Installation & Setup](#installation--setup)
+7. [How to Use](#how-to-use)
+8. [Algorithms & Custom Logic](#algorithms--custom-logic)
+9. [Proposal Scope Alignment](#proposal-scope-alignment)
+10. [Testing Results](#testing-results)
+11. [Deployment](#deployment)
+12. [Functionality, Scope Alignment & Algorithms (Report Section)](#functionality-scope-alignment--algorithms-report-section)
+13. [Analysis of Results](#analysis-of-results)
+
+---
+
+## Project Overview
+
+ADGVC addresses a persistent problem in software development: documentation is neglected, becomes outdated, and quickly falls out of sync with the code it describes. The system automates documentation generation through three complementary approaches:
+
+1. **Rule-based engine** — classifies and structures free-text developer notes into documentation sections using weighted keyword and regex matching.
+2. **AST parser** — parses JavaScript/TypeScript source files via `@babel/parser` to extract function signatures, classes, interfaces, JSDoc, Express API surfaces, and React patterns.
+3. **LLM synthesis** (optional) — sends the structured AST and rule output to GPT-4o-mini to produce human-readable prose documentation.
+
+Every generation is saved as a real Git commit in a per-document repository. Versions can be compared side-by-side, rolled back, and exported as PDF, Word, or Markdown. A drift detector alerts developers when linked GitHub source files change.
 
 ---
 
 ## Features
 
-- User registration and login with JWT authentication
-- Create and manage projects
-- Generate documentation from unstructured developer notes (rule-based engine)
-- Generate documentation from GitHub repositories (AST parser — supports JavaScript and TypeScript)
-- View, edit, and export documentation (PDF, Markdown, Word)
-- Version history with the ability to compare two versions side by side
-- Roll back to any previous version
-- Invite contributors with role-based access (Owner, Editor, Viewer)
-- Dark and light theme toggle
-- GitHub OAuth integration
+| Feature | Description |
+|---|---|
+| **Register / Login** | Email + password with JWT, or GitHub OAuth |
+| **Projects** | Create and manage multiple documentation projects |
+| **Note-based generation** | Paste developer notes → structured documentation via rule engine |
+| **Code-based generation** | Connect GitHub repo, pick a file → documentation via AST parser |
+| **LLM enhancement** | Optional GPT-4o-mini pass for improved readability |
+| **Version history** | Every save creates a Git commit; full history is browsable |
+| **Version diff** | Side-by-side LCS diff between any two versions |
+| **Rollback** | Restore any previous version (preserves audit trail) |
+| **Export** | PDF, Word (.docx), Markdown |
+| **Drift detection** | Three-state alert when linked source files change on GitHub |
+| **Collaborators** | Invite team members with Owner / Editor / Viewer roles |
+| **Email notifications** | Automatic email when a collaborator is added |
+| **Dark / light theme** | Full theme support |
+
+---
+
+## Screenshots
+
+### Welcome Page
+![Welcome Page](screenshots-blackboxtesting/welcome_page.png)
+
+### Sign In
+![Sign In](screenshots-blackboxtesting/signin_page.png)
+
+### Dashboard
+![Dashboard](screenshots-blackboxtesting/dashboard.png)
+
+### Document Generation
+![Document Generation](screenshots-blackboxtesting/document-generation.png)
+
+### Generated Documentation
+![Generated Documentation](screenshots-blackboxtesting/generated-documantation.png)
+
+### Version Diff (Compare Versions)
+![Compare Versions](screenshots-blackboxtesting/cmparing-versions.png)
+
+### Rollback to Previous Version
+![Rollback](screenshots-blackboxtesting/rollback.png)
+
+### Documentation Before LLM Enhancement
+![Before LLM](screenshots-blackboxtesting/documantation-beforellm.png)
+
+### Edit Documentation
+![Edit Documentation](screenshots-blackboxtesting/edit_documantation.png)
+
+### Export — PDF
+![Exported PDF](screenshots-blackboxtesting/exported-pdf.png)
+
+### Export — Word Document
+![Exported Word](screenshots-blackboxtesting/exported_word-doc.png)
+
+### Export — Markdown
+![Exported Markdown](screenshots-blackboxtesting/exported-markdown.png)
+
+### Repositories Browser
+![Repositories](screenshots-blackboxtesting/repositories.png)
+
+### File in Repository
+![File in Repository](screenshots-blackboxtesting/file-in-repositories.png)
+
+### Commit Documentation to GitHub
+![Commit to GitHub](screenshots-blackboxtesting/commiting-to-github.png)
+
+### Add Contributor
+![Add Contributor](screenshots-blackboxtesting/addcontributor_to_project.png)
+
+### Sign In with GitHub OAuth
+![GitHub OAuth](screenshots-blackboxtesting/signin-with-github.png)
+
+### Validation — Empty Fields
+![Empty Fields](screenshots-blackboxtesting/empty-fileds.png)
+
+### Validation — Short Password
+![Short Password](screenshots-blackboxtesting/Short%20Password_Registration_Validation.png)
+
+### Validation — Wrong Credentials
+![Wrong Credentials](screenshots-blackboxtesting/incorrect-passw-email.png)
 
 ---
 
 ## Tech Stack
 
-| Layer | Technology |
-|---|---|
-| Frontend | React.js, Vite, TypeScript, CSS |
-| Backend | Node.js, Express.js, TypeScript |
-| Database | MongoDB Atlas |
-| Authentication | JWT, bcryptjs |
-| Code Parsing | @babel/parser (AST) |
-| GitHub Integration | GitHub REST API |
-| Export | pdfkit, docx, Blob (Markdown) |
-| Testing | Vitest |
-| Deployment | Render (backend + frontend) |
+| Layer | Technology | Purpose |
+|---|---|---|
+| Frontend | React 18, Vite, TypeScript | User interface |
+| State management | Zustand | Auth and theme stores |
+| Backend | Node.js 18, Express, TypeScript | REST API and business logic |
+| Database | MongoDB Atlas + Mongoose | Documents, versions, projects, users |
+| Auth | JWT, bcryptjs, GitHub OAuth | Session security |
+| Code Parsing | @babel/parser, @babel/traverse | AST-based code analysis |
+| Export | pdfkit, docx, Blob (native) | PDF, Word, Markdown output |
+| Versioning | simple-git | Per-document Git repositories on disk |
+| Email | Nodemailer (SMTP) | Collaborator notifications |
+| Testing | Vitest | Unit and integration tests |
+| Deployment | Render (backend + frontend), MongoDB Atlas | Cloud hosting |
 
 ---
 
-## Installation and Setup
+## Project Structure
+
+```
+automated-documentation-version-control/
+├── client/                          # React frontend (Vite + TypeScript)
+│   └── src/
+│       ├── components/              # UI components (DiffView, ExportMenu, CommitGraph, …)
+│       ├── pages/                   # Route pages (Dashboard, DocWorkspace, Projects, …)
+│       ├── lib/                     # API client, hooks, store helpers
+│       └── routes/store/            # Zustand auth, theme, toast, staged stores
+│
+├── server/                          # Express backend (Node.js + TypeScript)
+│   └── src/
+│       ├── controllers/             # HTTP handlers (auth, docs, generate, export, github, …)
+│       ├── services/
+│       │   ├── astParser.ts         # @babel/parser AST traversal — core algorithm
+│       │   ├── noteEngine.ts        # Rule-based note classifier — core algorithm
+│       │   ├── classifier.ts        # File role detector (React, API, util, …)
+│       │   ├── docComposer.ts       # Combines note + AST output into Markdown
+│       │   ├── driftService.ts      # Three-state drift detector against GitHub
+│       │   ├── versionService.ts    # Git-backed versioning (simple-git)
+│       │   ├── llmSynthesis.ts      # Optional two-pass GPT-4o-mini enhancement
+│       │   └── exporters/           # PDF (pdfkit), DOCX (docx), Markdown
+│       ├── models/                  # Mongoose schemas (User, Project, Documentation, DocVersion, …)
+│       ├── routes/                  # Express routers
+│       ├── middleware/              # requireAuth (JWT), validate, errorHandler
+│       └── lib/
+│           ├── diff.ts              # Custom LCS line diff algorithm
+│           ├── signatureHash.ts     # SHA-256 API signature hashing
+│           └── dataStore.ts         # In-memory store (MOCK_MODE) + MongoDB adapter
+│
+├── server/tests/                    # Vitest test suite (83 tests, 10 files)
+└── screenshots-blackboxtesting/     # Black-box testing evidence (24 screenshots)
+```
+
+---
+
+## Installation & Setup
 
 ### Prerequisites
 
-Make sure you have the following installed on your machine:
-- [Node.js](https://nodejs.org/) (v18 or higher)
-- [npm](https://www.npmjs.com/)
-- A [MongoDB Atlas](https://www.mongodb.com/atlas) account (free tier works)
-- A [GitHub](https://github.com/) account and personal access token
+- Node.js v18 or higher
+- npm v8 or higher
+- MongoDB Atlas account (free tier is sufficient)
+- GitHub account (for OAuth and repo browsing features)
+- OpenAI API key (optional — only required for LLM synthesis)
 
----
-
-### 1. Clone the Repository
+### Step 1 — Clone the Repository
 
 ```bash
 git clone https://github.com/beverlymugwadi/ADGVC.git
 cd ADGVC
 ```
 
----
-
-### 2. Set Up the Backend
+### Step 2 — Backend Setup
 
 ```bash
 cd server
 npm install
 ```
 
-Create a `.env` file inside the `server/` folder with the following content:
+Create the environment file `server/.env` (copy from the example):
+
+```bash
+cp .env.example .env
+```
+
+Then fill in the values:
 
 ```env
 PORT=4000
 MONGODB_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/adgvc
-JWT_SECRET=replace-me-with-a-long-random-secret
-GITHUB_CLIENT_ID=
-GITHUB_CLIENT_SECRET=
+JWT_SECRET=replace-with-a-long-random-string-at-least-32-chars
+GITHUB_CLIENT_ID=your-github-oauth-app-client-id
+GITHUB_CLIENT_SECRET=your-github-oauth-app-client-secret
 GITHUB_CALLBACK_URL=http://localhost:4000/api/auth/github/callback
-GITHUB_SCOPE=user:email,read:user,public_repo
 CLIENT_URL=http://localhost:5173
-ENCRYPTION_KEY=
+ENCRYPTION_KEY=32-character-hex-string-for-token-encryption
 MOCK_MODE=false
-OPENAI_API_KEY=
-OPENAI_MODEL=gpt-4o-mini
+OPENAI_API_KEY=sk-...  # optional — leave blank to disable LLM synthesis
 ```
 
-> Tip: Set `MOCK_MODE=true` to run the server without a MongoDB connection (useful for quick local demos).
+> **Quick demo mode:** Set `MOCK_MODE=true` to run the full app without a MongoDB connection. All data is stored in memory.
 
-Start the backend server:
+Start the backend:
 
 ```bash
 npm start
 ```
 
-The backend will run on `http://localhost:4000`
+The API will be available at `http://localhost:4000`.
 
----
+### Step 3 — Frontend Setup
 
-### 3. Set Up the Frontend
-
-Open a new terminal window:
+Open a new terminal:
 
 ```bash
 cd client
@@ -108,401 +255,256 @@ npm install
 npm run dev
 ```
 
-The frontend will run on `http://localhost:5173`
+Open `http://localhost:5173` in your browser.
 
----
-
-### 4. Open the App
-
-Visit `http://localhost:5173` in your browser. Register an account and start using the app.
-
----
-
-### 5. Run the Tests
+### Step 4 — Run Tests
 
 ```bash
 cd server
 npm test
 ```
 
-This runs all unit and integration tests using Vitest.
+All 83 tests should pass in approximately 3.5 seconds with no external dependencies required.
 
 ---
 
 ## How to Use
 
-1. **Register** an account and log in
-2. **Create a project** from the Dashboard
-3. **Generate documentation** by either:
-   - Pasting your developer notes into the text area, or
-   - Connecting a GitHub repository and selecting a file to parse
-4. **View your documentation** in the Doc Viewer
-5. **Edit** sections as needed
-6. **Export** as PDF, Markdown, or Word
-7. **Compare versions** using Version History
-8. **Roll back** to a previous version if needed
-9. **Invite contributors** and assign them roles (Editor or Viewer)
+1. **Register** — create an account with email/password, or click **Sign in with GitHub**
+2. **Create a project** — give it a name and description
+3. **Generate documentation** — two options:
+   - **From notes:** paste free-text developer notes into the input area and click Generate
+   - **From code:** connect a GitHub repository, browse to a file, and click Generate from File
+4. **Review and edit** — the generated Markdown is editable in the workspace
+5. **Save and version** — every save creates a new version entry
+6. **Compare versions** — open Version History and select any two versions to view a side-by-side diff
+7. **Roll back** — click Rollback on any version to restore it (the rollback itself is saved as a new version)
+8. **Export** — use the Export menu to download PDF, Word, or Markdown
+9. **Add collaborators** — open the Members panel and invite team members by email
 
 ---
 
-## Supported Languages for AST Parsing
+## Algorithms & Custom Logic
 
-AST-based automatic code structure extraction supports:
-- JavaScript (.js, .jsx)
-- TypeScript (.ts, .tsx)
-
-Other languages (Python, Java, C#, Go, Ruby) can be documented using the **notes input method**.
-
----
-
-## Deployment Plan and Execution
-
-The application is deployed as two separate services on Render's free tier:
-
-| Service | Type | URL |
+| Algorithm | File | Description |
 |---|---|---|
-| Backend (Express API) | Render Web Service | `https://automated-documentation-generator-with-of94.onrender.com` |
-| Frontend (React/Vite) | Render Static Site | Same domain (served via backend) |
-| Database | MongoDB Atlas (free tier) | Cluster hosted on AWS |
-
-### Deployment Steps
-
-1. **Database:** Create a MongoDB Atlas free cluster. Whitelist `0.0.0.0/0` for Render's dynamic IPs. Copy the connection string into the `MONGODB_URI` environment variable on Render.
-2. **Backend:** Connect the GitHub repo to a new Render Web Service. Set `Build Command` to `cd server && npm install && npm run build` and `Start Command` to `cd server && npm start`. Add all required environment variables in the Render dashboard.
-3. **Frontend (option A — served by backend):** The Vite build output (`client/dist`) is served as static files by the Express server. Run `cd client && npm run build` before deploying.
-4. **Frontend (option B — separate static site):** Connect the GitHub repo to a new Render Static Site. Set `Build Command` to `cd client && npm install && npm run build` and `Publish Directory` to `client/dist`.
-5. **Verify:** Visit the live URL, register a test account, generate documentation from both notes and a GitHub file, export to PDF, and confirm version history works.
-
-### Deployment Verification
-
-The live deployment was verified by:
-- Successfully registering and logging in
-- Generating documentation from developer notes
-- Connecting a GitHub repository and parsing a TypeScript file
-- Exporting a document as PDF
-- Creating two versions and performing a side-by-side diff
+| Rule-based note classifier | `noteEngine.ts` | Scores each input line against 7 rules using keyword + regex matches (weighted 1.0–1.4). Single-pass O(n). |
+| AST code parser | `astParser.ts` | `@babel/parser` builds an AST; custom `@babel/traverse` visitor extracts functions, classes, interfaces, JSDoc, Express surfaces, React patterns, env vars, throws. |
+| File role classifier | `classifier.ts` | Detects whether a parsed file is a React component, hook, API route, Next.js page/layout, utility, or type module — using AST patterns. |
+| LCS line diff | `diff.ts` | Custom Longest Common Subsequence implementation. Produces typed `add / del / context` hunks consumed by the diff UI. |
+| SHA-256 signature hash | `signatureHash.ts` | Serialises exported function signatures, sorts, joins, and hashes with SHA-256. Stable across formatting; changes only when the API contract changes. |
+| Three-state drift detector | `driftService.ts` | Compares blob SHAs; re-parses and re-hashes on change; classifies as `current` / `implementation_changed` / `signature_changed`. |
+| Git-backed versioning | `versionService.ts` | Every save is a real `git commit` in a per-document on-disk repo. Rollback re-saves old content as a new commit — audit trail is never rewritten. |
+| Two-pass LLM synthesis | `llmSynthesis.ts` | Pass 1 generates document-level Overview/Configuration; Pass 2 generates per-function reference. Runs in parallel. Degrades silently without an API key. |
 
 ---
 
-## Testing Results and Strategies
+## Proposal Scope Alignment
 
-### Testing Framework
+### All Proposal Objectives Met
 
-The backend uses **Vitest** for all automated tests. Tests are located in `server/tests/`.
-
-### Test Run Summary
-
-```
-Test Files:  10 passed (10 total)
-Tests:       83 passed (83 total)
-Duration:    ~3.5 seconds
-```
-
-### Testing Strategy 1 — Unit Testing (Service Layer)
-
-Each core service is tested in isolation with multiple input variations.
-
-#### Note Engine (`noteEngine.test.ts` — 6 tests)
-
-Tests the rule-based classifier that sorts developer notes into documentation sections (Overview, Installation, Usage, API, TODO).
-
-| Test | Input | Expected Output |
+| Proposal Objective | Status | Module |
 |---|---|---|
-| Section ordering | Mixed notes with Overview, Install, Usage, API, TODO | Sections appear in correct order |
-| Installation keyword | "Run npm install and set up your .env file" | Routed to Installation section |
-| API detection | "POST /api/users accepts a payload" | Routed to API section |
-| TODO flagging | "FIXME: handle rate limiting" | Routed to TODO section |
-| Code block preservation | Notes with fenced ` ```ts ``` ` block | Code block kept intact under Usage |
-| Empty input | `""` | Returns empty sections, blockCount = 0 |
+| Documentation from developer notes (rule-based) | Implemented | `noteEngine.ts` |
+| Documentation from source code (AST) | Implemented | `astParser.ts` |
+| Version control for generated documents | Implemented | `versionService.ts` |
+| Compare versions (diff) | Implemented | `diff.ts` |
+| Roll back to previous version | Implemented | `versionService.ts` |
+| Detect code divergence from documentation | Implemented | `driftService.ts` |
 
-#### AST Parser (`astParser.test.ts` — 10 tests)
+### Delivered Beyond the Proposal
 
-Tests the Babel-based parser that extracts functions, classes, interfaces, imports, and exports from JavaScript/TypeScript source files.
-
-| Test | Input | What is verified |
-|---|---|---|
-| Documented function | `export function add(a: number, b: number = 0): number` | Name, return type, params, JSDoc, optional flag |
-| Arrow functions | `export const greet = (name: string): string => ...` | Kind = `arrow`, import summaries |
-| Destructured params | `function Error({ error, reset }: {...})` | Properties extracted from object param |
-| React component | Component with `useState`, JSX, event handler | Hooks, JSX elements, event handlers, directives |
-| Sparse files | `export const config = { a: 1 }` | Raw node text captured |
-| Classes | `class Dog extends Animal` with methods & properties | SuperClass, methods, properties, async flag |
-| Interfaces & types | `export interface LineItem`, `export type Id` | Members, optional markers, kind |
-| Exports | Named and default exports | Names array, default flag |
-| Syntax error | `const = = =;` | Throws `AstParseError` with line number |
-| Batch error handling | One valid file + one broken file | Parsed = 1, errors = 1, does not abort |
-
-#### File Role Classifier (`classifier.test.ts` — 8 tests)
-
-Tests the logic that classifies a parsed file into a semantic role (React component, hook, API endpoint, Next.js page, utility, types-only module, etc.).
-
-| Input File | Code Pattern | Expected Role |
-|---|---|---|
-| `app/error.tsx` | `'use client'` + `{error, reset}` props | `next-error-boundary` |
-| `app/api/users/route.ts` | Exports `GET` and `POST` | `next-route-handler` |
-| `handlers.ts` | Exports `DELETE` | `api-endpoint` |
-| `Card.tsx` | Returns JSX | `react-component` |
-| `useToggle.ts` | Exported `use*` function calling `useState` | `react-hook` |
-| `app/page.tsx` | Default export returning `<main/>` | `next-page` |
-| `math.ts` | `export function add(a, b)` | `util` |
-| `types.ts` | `export interface User` | `types` |
-
-#### Drift Three-State Detection (`driftThreeState.test.ts` — 6 tests)
-
-Tests the logic that determines whether a connected GitHub file's documentation is current, has implementation-only changes, or has signature-breaking changes.
-
-| Scenario | Commit SHA | Signature Hash | Expected State |
-|---|---|---|---|
-| No change at all | Same | Same | `current` |
-| Refactor only (same signature) | Changed | Same | `implementation_changed` |
-| New parameter added | Changed | Different | `signature_changed` |
-| Exported function removed | Changed | Different | `signature_changed` |
-| No stored hash (first run) | Changed | Missing | `implementation_changed` (conservative) |
-| SHA unchanged despite content diff | Same | Would differ | `current` (SHA is the gate) |
-
-#### Signature Hash (`signatureHash.test.ts` — 7 tests)
-
-Verifies that the SHA fingerprint of a file's public API is stable across formatting changes but changes when the public API changes.
-
-#### AST Comments (`astComments.test.ts` — 11 tests)
-
-Verifies extraction of JSDoc comments, `@param` tags, `@returns` tags, and inline comments from TypeScript/JavaScript source.
-
-#### CommonJS Exports (`commonjsExports.test.ts` — 21 tests)
-
-Verifies that `module.exports = { ... }` and `exports.X = ...` patterns are correctly extracted alongside ES module exports.
-
-#### Pipeline Improvements (`pipelineImprovements.test.ts` — 12 tests)
-
-Tests three quality improvements to the documentation generator:
-- **Fix 3 (env-var extraction):** Extracts all `process.env.VAR` reads from source files and surfaces them in a `## Configuration` section
-- **Fix 3 (throw detection):** Detects `throw new Error(...)` statements per function and adds a `**Throws:**` line in the output
-- **Fix 4 (no empty tables):** Renders `"Takes no parameters."` instead of an empty parameter table for zero-arg functions; omits the `Returns:` line for `void` functions
-- **Fix 2 (title cross-check):** Confirms the rule-based output always uses the supplied title, while the LLM pass can override it using code-derived context
-
-#### LLM Synthesis (`llmSynthesis.test.ts` — 1 test)
-
-Verifies that the synthesis module is importable and exposes the expected interface, even without an OpenAI key configured (graceful degradation).
-
----
-
-### Testing Strategy 2 — Integration Testing (`integration.test.ts`)
-
-Tests the full document lifecycle end-to-end in a single test:
-
-```
-Generate → Save Version → Diff → Rollback → Export (PDF + DOCX)
-```
-
-Steps covered:
-1. Create a project in the data store
-2. Generate documentation with `compose()` from notes + a TypeScript file
-3. Save version 1 and verify `versionNo = 1`, `commitHash` is set
-4. Save version 2 with added content; verify `versionNo = 2`
-5. Call `lineDiff()` on the two versions; verify `additions > 0`
-6. Roll back to version 1 by saving it as version 3; verify document content reverts
-7. Export to PDF; verify byte length > 800 and starts with `%PDF`
-8. Export to DOCX; verify byte length > 800
-
-This test is fully passing. An `InMemoryDataStore` was implemented in `src/lib/dataStore.ts` — a Map-based implementation of the `DataStore` interface that requires no database connection. The `vitest.config.ts` sets `MOCK_MODE=true` for all test runs, which causes `dataStore` to use the in-memory store automatically. The full pipeline (compose, saveDocVersion, lineDiff, exportPdf, exportDocx) runs end-to-end in ~1.7 seconds without any external dependencies.
-
----
-
-### Testing Strategy 3 — Different Data Values
-
-| Scenario | Input | Result |
-|---|---|---|
-| Empty notes | `""` | Returns empty sections gracefully |
-| Mixed note types | Overview + Install + TODO + API in one input | Each line routed to correct section |
-| Malformed TypeScript | `const = = =;` | `AstParseError` thrown with line number |
-| Batch with one broken file | `[valid.ts, broken.ts]` | Valid file parsed, error recorded for broken file, no crash |
-| Zero-parameter function | `export function init() {}` | "Takes no parameters." rendered |
-| Function with internal `catch` | `authMiddleware` catching `verifyToken` errors | Throws not attributed to outer function |
-| Real auth module (CommonJS) | Full `auth.js` with `register`, `login`, `verifyToken` | All functions extracted, env vars surfaced |
-
----
-
-### Testing Strategy 4 — Performance and Environment
-
-| Environment | Result |
+| Feature | Justification |
 |---|---|
-| Local (Windows 11, Node.js v18, no DB) | All 83 tests pass in ~3.5 s (unit + integration, via `InMemoryDataStore`) |
-| Local (Windows 11, Node.js v18, `MOCK_MODE=true`) | App runs, documentation generates, versions save |
-| Render cloud (Ubuntu, Node.js v18) | App deployed and live at the Render URL |
-| MongoDB Atlas (cloud DB) | CRUD operations confirmed via the live app |
-| No OpenAI key configured | LLM synthesis disabled gracefully; rule-based output returned |
+| LLM synthesis (GPT-4o-mini) | Improves output quality; built on top of the rule-based/AST pipeline; fully optional |
+| Collaborators with RBAC | Documentation is a team activity; single-user tools have limited real-world adoption |
+| Email notifications | Alerts collaborators automatically when added to a project |
+| Export (PDF, Word, Markdown) | Documentation must be shareable outside the web tool |
+| GitHub OAuth | Reduces sign-up friction for developer users |
+| CommonJS export detection | Real-world JS projects use `module.exports`, not only ES modules |
+| SHA-256 API signature hashing | Prevents false "stale" alerts on formatting-only code commits |
 
 ---
 
-## Screenshots
+## Testing Results
 
-### Welcome Page
+**83 / 83 tests pass — 10 test files — ~3.5 s — no database or network required**
 
-![Welcome Page](screenshots-blackboxtesting/welcome_page.png)
+### Unit Tests
 
-### Sign In Page
+| Test File | What is Tested | Tests |
+|---|---|---|
+| `noteEngine.test.ts` | Rule-based classifier section detection | 6 |
+| `astParser.test.ts` | AST function, class, and interface extraction | 10 |
+| `astComments.test.ts` | JSDoc comment parsing and extraction | 11 |
+| `classifier.test.ts` | File role detection (React, hook, API, util, types) | 8 |
+| `driftThreeState.test.ts` | Three-state drift classification logic | 6 |
+| `signatureHash.test.ts` | SHA hash stability and change detection | 7 |
+| `commonjsExports.test.ts` | CommonJS `module.exports` and `exports.*` patterns | 21 |
+| `pipelineImprovements.test.ts` | Env-var detection, throw extraction, edge cases | 12 |
+| `llmSynthesis.test.ts` | LLM module graceful degradation without API key | 1 |
 
-![Sign In](screenshots-blackboxtesting/signin_page.png)
+### Integration Test
 
-### Sign In with GitHub
+`integration.test.ts` — end-to-end lifecycle against `InMemoryDataStore` (no external services):
 
-![Sign In with GitHub](screenshots-blackboxtesting/signin-with-github.png)
+**Generate docs → Save version → Compute diff → Rollback → Export PDF + Export DOCX**
 
-### Incorrect Password / Email Error
+### Black-Box Testing (Manual Browser)
 
-![Incorrect Credentials](screenshots-blackboxtesting/incorrect-passw-email.png)
+| Area | Scenarios Tested |
+|---|---|
+| Auth | Sign in, GitHub OAuth, wrong password, empty fields, short password |
+| Projects | Create project, add collaborator, confirm member list |
+| Docs | Generate from notes, generate from GitHub file, view output, edit inline |
+| Versions | Compare versions (diff view), rollback to v1, confirm version numbers |
+| Export | PDF, Word, Markdown — all verified with screenshots |
+| GitHub | Browse repos, browse files, commit documentation to GitHub |
 
-### Short Password — Registration Validation
+### Varied Data Values
 
-![Short Password Registration Validation](screenshots-blackboxtesting/Short%20Password_Registration_Validation.png)
+| Input | Expected Result | Outcome |
+|---|---|---|
+| Empty notes | Graceful empty state | Pass |
+| Short password | "Use at least 8 characters" error | Pass |
+| Wrong credentials | "Incorrect email or password" | Pass |
+| Mixed note types | Each line classified correctly | Pass |
+| Malformed TypeScript | `AstParseError` with line number | Pass |
+| CommonJS file (`auth.js`) | All exports extracted | Pass |
+| No OpenAI key | Rule-based output returned without error | Pass |
 
-### Empty Fields Validation
+### Performance Across Environments
 
-![Empty Fields](screenshots-blackboxtesting/empty-fileds.png)
+| Environment | Outcome |
+|---|---|
+| Local — Windows 11, Node 18 | 83 tests pass in ~3.5 s |
+| Local — `MOCK_MODE=true` | Full app runs without MongoDB |
+| Cloud — Render (Ubuntu, Node 18) | Deployed and live |
+| Cloud DB — MongoDB Atlas | Full CRUD confirmed |
+| No OpenAI key | LLM skipped gracefully |
 
-### Dashboard
+---
 
-![Dashboard](screenshots-blackboxtesting/dashboard.png)
+## Deployment
 
-### Project Created
+The system is deployed on Render's free tier.
 
-![Project Created](screenshots-blackboxtesting/project-created.png)
+| Service | Details |
+|---|---|
+| Backend | Render Web Service — Express + static frontend served from `/dist` |
+| Database | MongoDB Atlas (AWS, free tier) |
+| Build command | `cd server && npm install && npm run build` |
+| Start command | `cd server && npm start` |
 
-### Add Contributor to Project
+**Environment variables** are configured in the Render dashboard (same keys as `server/.env.example`).
 
-![Add Contributor](screenshots-blackboxtesting/addcontributor_to_project.png)
+---
 
-### Contributor Added
+## Functionality, Scope Alignment & Algorithms (Report Section)
 
-![Contributor Added](screenshots-blackboxtesting/contributor%20added.png)
+### Core Functionalities Implemented
 
-### Document Generation
+The ADGVC system was delivered as a fully functional, deployed web application. All six objectives defined in the approved proposal were implemented and are operational in the live system.
 
-![Document Generation](screenshots-blackboxtesting/document-generation.png)
+| Proposal Objective | Status | Module |
+|---|---|---|
+| Documentation generation from developer notes (rule-based) | Implemented | `noteEngine.ts` |
+| Documentation generation from source code (AST) | Implemented | `astParser.ts` |
+| Version control for generated documentation | Implemented | `versionService.ts` |
+| Version comparison (diff view) | Implemented | `diff.ts` |
+| Rollback to a previous version | Implemented | `versionService.ts` |
+| Detect divergence between code and documentation | Implemented | `driftService.ts` |
 
-### Generated Documentation
+Three capabilities were added beyond the approved proposal: LLM synthesis via GPT-4o-mini to improve output readability; team collaboration with role-based access control (Owner, Editor, Viewer); and multi-format export (PDF, Word, Markdown). Each extends the core system without deviating from the original research goal.
 
-![Generated Documentation](screenshots-blackboxtesting/generated-documantation.png)
+### Scope Alignment
 
-### Documentation Before LLM Enhancement
+The implemented system aligns precisely with the scope boundaries stated in the proposal. The system processes JavaScript and TypeScript source code only, as specified. The React.js frontend, Node.js/Express backend, and MongoDB database match the approved technology stack exactly. The `@babel/parser` library is used for AST-based code analysis as proposed. Git version tracking is implemented through the `simple-git` library, producing real Git commits on disk for each documentation save. PDF and Markdown export are supported, with Word (.docx) added as a practical extension.
 
-![Documentation Before LLM](screenshots-blackboxtesting/documantation-beforellm.png)
+### Algorithms and Custom Logic
 
-### Edit Documentation
+Seven distinct algorithms underpin the system. Each is custom-built or custom-configured rather than delegated to a third-party library.
 
-![Edit Documentation](screenshots-blackboxtesting/edit_documantation.png)
+#### 1. Rule-Based Note Classifier — `noteEngine.ts`
 
-### Documentation and Version Diff
+Developer notes entered as free text are processed in a single pass. The engine defines seven rules covering sections: Overview, Installation, Usage, Configuration, API, Notes & Caveats, and TODO. Each rule carries a keyword list and a set of compiled regular expressions. Every input line is scored against all rules: a keyword match adds the rule's weight (1.0–1.4); a pattern match adds 1.5× the weight. The highest-scoring rule wins; unscored lines default to Overview. Code fences are detected and routed directly to the Usage section. This produces a structured set of labelled sections from unstructured text in **O(n)** time.
 
-![Documentation and Diff](screenshots-blackboxtesting/documantation%20and%20diff%20versions.png)
+#### 2. AST Code Parser — `astParser.ts`
 
-### Comparing Versions
+Source code is parsed using `@babel/parser` with the `typescript`, `jsx`, `classProperties`, `decorators-legacy`, and `optionalChaining` plugins enabled. A `@babel/traverse` visitor extracts:
 
-![Comparing Versions](screenshots-blackboxtesting/cmparing-versions.png)
+- Function declarations, arrow functions, and class methods
+- TypeScript interfaces and type aliases
+- ES module exports and CommonJS `exports.*` / `module.exports.*` patterns
+- Import groups, JSDoc comments parsed into `{ description, params, returns, route, access, deprecated }`, and inline comments
+- Throw statements and environment variable references (`process.env.*`)
+- Express handler API surfaces (body fields, path params, query params, response shapes)
+- React hooks and JSX elements
 
-### Rollback to Previous Version
+Parse errors surface with file name and line number rather than crashing, allowing partial results to be used.
 
-![Rollback](screenshots-blackboxtesting/rollback.png)
+#### 3. File Role Classifier — `classifier.ts`
 
-### Repositories
+Parsed files are classified into one of seven roles: `next-error-boundary`, `next-page`, `next-layout`, `next-route-handler`, `api-endpoint`, `react-component`, `react-hook`, `util`, or `types`. Classification inspects file name patterns, HTTP method exports, `use client`/`use server` directives, JSX element presence, and React hook naming conventions. The role label appears in each file's documentation header.
 
-![Repositories](screenshots-blackboxtesting/repositories.png)
+#### 4. LCS Line Diff — `diff.ts`
 
-### File in Repositories
+Version comparison uses a custom **Longest Common Subsequence** implementation. Given two content strings, the algorithm splits each into lines, builds an LCS matrix, and backtraces to produce a typed array of `{ type: 'add' | 'del' | 'context', text }` hunks consumed directly by the `DiffView` React component.
 
-![File in Repositories](screenshots-blackboxtesting/file-in-repositories.png)
+#### 5. SHA-256 API Signature Hash — `signatureHash.ts`
 
-### Committing to GitHub
+To distinguish meaningful code changes from formatting-only edits, the system computes a deterministic SHA-256 hash of all exported function signatures. Each exported function contributes a normalised string of the form `fn:name(param:type,...):returnType`. These strings are sorted and joined before hashing. A formatting change produces no hash change; a renamed parameter, added parameter, or changed return type does. This hash is stored with each source binding and drives the drift detector.
 
-![Committing to GitHub](screenshots-blackboxtesting/commiting-to-github.png)
+#### 6. Three-State Drift Detector — `driftService.ts`
 
-### Exported PDF
+When a documentation record is bound to a GitHub source file, the system compares the stored blob SHA against the current GitHub blob SHA. Three outcomes are possible:
 
-![Exported PDF](screenshots-blackboxtesting/exported-pdf.png)
+| State | Condition |
+|---|---|
+| `current` | Blob SHA unchanged |
+| `implementation_changed` | SHA changed, signature hash unchanged — internal logic altered, API surface the same |
+| `signature_changed` | SHA changed and signature hash differs — exported names/types changed, documentation is likely wrong |
 
-### Exported Word Document
+For `signature_changed`, the system diffs old and new signature entries to identify the specific added, removed, or renamed exports, which are surfaced to the developer in the UI banner.
 
-![Exported Word Document](screenshots-blackboxtesting/exported_word-doc.png)
+#### 7. Git-Backed Version Control — `versionService.ts`
 
-### Exported Markdown
+Every documentation save creates a real Git commit in a per-document repository on disk under `.docrepos/<docId>/`. The `simple-git` library initialises the repo on first save, writes content to `document.md`, stages it, and commits it. The commit hash is stored in MongoDB alongside the version record. Rollback re-saves old content as a new version, preserving a complete audit trail without rewriting history.
 
-![Exported Markdown](screenshots-blackboxtesting/exported-markdown.png)
+#### 8. Two-Pass LLM Synthesis — `llmSynthesis.ts` (optional)
 
-### Markdown Preview
+When an OpenAI API key is configured, structured AST and rule-based output is sent to GPT-4o-mini in two parallel passes:
 
-![Markdown Preview](screenshots-blackboxtesting/markdown_preview.png)
+- **Pass 1 (HEAD):** generates the document-level Overview, How It Fits Together, and Configuration sections from a declaration summary and developer notes.
+- **Pass 2 (UNITS):** generates per-function reference sections (purpose, parameters, responses, returns, throws, side effects, usage example) from per-function fact sheets and source excerpts.
+
+The two outputs are merged into a single Markdown document. Without an API key the rule-based and AST output is returned unchanged; the system degrades silently.
+
+### Testing Coverage
+
+| Test File | What is tested | Tests |
+|---|---|---|
+| `noteEngine.test.ts` | Rule-based classifier sections | 6 |
+| `astParser.test.ts` | AST function/class/interface extraction | 10 |
+| `astComments.test.ts` | JSDoc comment extraction | 11 |
+| `classifier.test.ts` | File role detection | 8 |
+| `driftThreeState.test.ts` | Three-state drift classifier | 6 |
+| `signatureHash.test.ts` | SHA hash stability and change detection | 7 |
+| `commonjsExports.test.ts` | CommonJS export patterns | 21 |
+| `pipelineImprovements.test.ts` | Env-var, throw detection, edge cases | 12 |
+| `llmSynthesis.test.ts` | LLM module graceful degradation | 1 |
+| `integration.test.ts` | Generate → Save → Diff → Rollback → Export | 1 |
+
+**83 / 83 tests pass — ~3.5 s — no database or network required.**
 
 ---
 
 ## Analysis of Results
 
-### Objectives Met
+All six proposal objectives were fully implemented. Three additional capabilities were added beyond the proposal — LLM synthesis, team collaboration with RBAC, and documentation drift detection — each adding measurable value without diverging from the original goal of automating documentation.
 
-The project proposal aimed to build a tool that automatically generates structured documentation from code and notes, stores each generation as a version, and allows comparison and rollback. All three core objectives were achieved:
+**83 of 83 tests pass** across unit, integration, and functional test categories. Tests run without any external dependencies using `InMemoryDataStore`. The AST parser and rule-based engine — the two core algorithms — are each covered by multiple deterministic tests with varied inputs.
 
-| Objective | Status | Evidence |
-|---|---|---|
-| Generate documentation from developer notes | Achieved | `noteEngine.ts` classifies notes into sections; 6 unit tests pass |
-| Generate documentation from source code via AST | Achieved | `astParser.ts` extracts functions, classes, interfaces; 10 unit tests pass |
-| Version control for generated documents | Achieved | `versionService.ts` assigns version numbers and commit hashes; tested in integration test |
-| Side-by-side diff between versions | Achieved | `lineDiff()` computes line-level additions/deletions; tested in integration test |
-| Roll back to a previous version | Achieved | Rollback re-saves a prior version's content as a new version |
-| Export documentation | Achieved | PDF (`pdfkit`) and DOCX (`docx`) exports both verified to produce valid binary output |
-| Role-based access control | Achieved | Owner, Editor, Viewer roles implemented in `Project.ts` model and API middleware |
-| GitHub OAuth | Achieved | `githubAuth.controller.ts` and `githubService.ts` handle OAuth flow and token encryption |
-
-### Objectives Partially Met
-
-| Objective | Status | Notes |
-|---|---|---|
-| LLM-enhanced documentation | Optional / disabled by default | `llmSynthesis.ts` exists and is tested; requires `OPENAI_API_KEY` to activate |
-
-### Objectives Not Met
-
-None of the core proposal objectives were left unimplemented.
-
-### Test Coverage Analysis
-
-- **83 of 83 tests pass** across 10 test files covering the rule-based engine, AST parser, file classifier, drift detection, signature hashing, CommonJS exports, comment extraction, pipeline output quality, the LLM synthesis interface, and the full document lifecycle integration test.
-- All tests run without any external dependencies (no database, no network) thanks to the `InMemoryDataStore` activated by `MOCK_MODE=true` in `vitest.config.ts`.
-- The note engine and AST parser together form the backbone of the documentation pipeline and are both fully covered by deterministic unit tests with multiple input variations.
+The live deployment on Render confirms the system works end-to-end: documentation generates from both notes and real GitHub source files, versions are saved, exports produce valid files, and collaborators can be invited.
 
 ---
-
-## Discussion
-
-### Importance of Milestones
-
-**Milestone 1 — Rule-based Note Engine:** This was the first core feature and established the documentation pipeline architecture. Classifying developer notes by keyword patterns (HTTP verbs for API sections, `npm install` keywords for Installation sections, `TODO`/`FIXME` for the TODO section) proved highly effective for unstructured input. The ordered-section output gives developers a consistent documentation structure without any manual effort.
-
-**Milestone 2 — AST Parser:** Integrating `@babel/parser` to extract function signatures, class hierarchies, TypeScript interfaces, JSDoc comments, env-var reads, and throw statements from source code was the most technically complex part of the project. The parser handles both ES modules and CommonJS, and correctly classifies file roles (React component, hook, API endpoint, Next.js page). This allows the tool to work with real-world codebases without any developer annotation.
-
-**Milestone 3 — Version Control:** Treating every documentation generation as a commit (with an assigned version number and hash) mirrors how source code version control works. This was key to the project's value proposition: developers can safely regenerate documentation knowing they can always roll back.
-
-**Milestone 4 — Diff and Rollback UI:** The side-by-side diff view makes it immediately visible what changed between two versions. This closes the loop on the version control system — without a readable diff, version history is just storage.
-
-**Milestone 5 — Export and Collaboration:** PDF, Markdown, and Word export formats cover the main ways teams share documentation. Role-based access (Owner, Editor, Viewer) means the tool is suitable for team projects, not just solo use.
-
-### Impact of Results
-
-The project demonstrates that rule-based and AST-based approaches — without requiring an LLM — can produce useful, structured documentation from real source code. The 83-test suite gives confidence that the core pipeline is robust to edge cases (malformed syntax, empty input, missing parameters, CommonJS vs ESM). The deployment on Render's free tier shows the tool is accessible to developers without cloud infrastructure budgets.
-
-The optional LLM synthesis layer (`OPENAI_API_KEY`) shows a clear upgrade path: when available, AI can improve the readability and accuracy of the generated text. When unavailable, the rule-based output is still functional.
-
----
-
-## Recommendations
-
-### For Developers Using This Tool
-
-1. **Use the notes input for non-JS/TS languages.** The AST parser currently supports only JavaScript and TypeScript. For Python, Java, C#, or Go projects, paste structured developer notes into the notes field to get the same section-organised output.
-2. **Enable `MOCK_MODE=true` for quick local demos.** You can run the full app without a MongoDB connection by setting this flag, which switches the data store to an in-memory implementation.
-3. **Activate LLM synthesis for higher-quality output.** Add an `OPENAI_API_KEY` to the `.env` file to enable the AI rewriting stage. The rule-based output is a solid foundation; the LLM stage makes the prose more readable.
-
-### Future Work
-
-1. **Extend AST parsing to Python and Java.** The `@babel/parser` library is JS/TS-only. A language-agnostic parser (e.g., using Tree-sitter) would allow the tool to analyse any codebase.
-2. **CI/CD integration.** Add a GitHub Action or webhook so documentation is automatically regenerated on each push to main. The webhook infrastructure (`webhooks.controller.ts`) is already in place.
-3. **Inline comments and @mentions for team collaboration.** Currently, contributors can only edit document content. Adding threaded comments on specific sections would make the tool useful for documentation review workflows.
-4. **Documentation drift alerts via email.** The drift detection system (`driftService.ts`) already identifies when connected GitHub files have changed. Sending email notifications to document owners when drift is detected would complete the feedback loop.
-5. **Export to Confluence and Notion.** Many development teams use these platforms for internal documentation. Adding API-based export adapters would significantly increase adoption.
