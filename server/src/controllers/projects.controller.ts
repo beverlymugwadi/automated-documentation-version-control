@@ -6,6 +6,8 @@ import { userStore } from '../lib/userStore';
 import { removeDocRepo } from '../services/versionService';
 import { requireProjectAccess, requireProjectOwner, roleOf, authorFromReq } from '../lib/access';
 import { HttpError } from '../middleware/errorHandler';
+import { sendCollaboratorInvite } from '../services/emailService';
+import { env } from '../config/env';
 
 const createProjectSchema = z.object({
   projectName: z.string().trim().min(1, 'Project name is required').max(140),
@@ -114,6 +116,18 @@ export const addMember = asyncHandler(async (req: Request, res: Response) => {
     addedAt: new Date().toISOString(),
   };
   const project = await dataStore.addMember(req.params.projectId, member);
+
+  // fire-and-forget — member is already saved; don't fail the request if email errors
+  const inviterName = req.user!.fullName || req.user!.githubLogin || req.user!.email;
+  const projectUrl = `${env.clientUrl}/projects/${req.params.projectId}`;
+  sendCollaboratorInvite({
+    toEmail: user.email,
+    toName: user.fullName,
+    projectName: project?.projectName ?? 'a project',
+    invitedByName: inviterName,
+    projectUrl,
+  }).catch((err) => console.error('[email] collaborator invite failed:', err));
+
   res.status(201).json({ members: project?.members ?? [] });
 });
 

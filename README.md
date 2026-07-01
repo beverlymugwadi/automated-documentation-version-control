@@ -21,24 +21,6 @@
 
 ---
 
-## Table of Contents
-
-1. [Project Overview](#project-overview)
-2. [Features](#features)
-3. [Screenshots](#screenshots)
-4. [Tech Stack](#tech-stack)
-5. [Project Structure](#project-structure)
-6. [Installation & Setup](#installation--setup)
-7. [How to Use](#how-to-use)
-8. [Algorithms & Custom Logic](#algorithms--custom-logic)
-9. [Proposal Scope Alignment](#proposal-scope-alignment)
-10. [Testing Results](#testing-results)
-11. [Deployment](#deployment)
-12. [Functionality, Scope Alignment & Algorithms (Report Section)](#functionality-scope-alignment--algorithms-report-section)
-13. [Analysis of Results](#analysis-of-results)
-
----
-
 ## Project Overview
 
 ADGVC addresses a persistent problem in software development: documentation is neglected, becomes outdated, and quickly falls out of sync with the code it describes. The system automates documentation generation through three complementary approaches:
@@ -68,70 +50,6 @@ Every generation is saved as a real Git commit in a per-document repository. Ver
 | **Collaborators** | Invite team members with Owner / Editor / Viewer roles |
 | **Email notifications** | Automatic email when a collaborator is added |
 | **Dark / light theme** | Full theme support |
-
----
-
-## Screenshots
-
-### Welcome Page
-![Welcome Page](screenshots-blackboxtesting/welcome_page.png)
-
-### Sign In
-![Sign In](screenshots-blackboxtesting/signin_page.png)
-
-### Dashboard
-![Dashboard](screenshots-blackboxtesting/dashboard.png)
-
-### Document Generation
-![Document Generation](screenshots-blackboxtesting/document-generation.png)
-
-### Generated Documentation
-![Generated Documentation](screenshots-blackboxtesting/generated-documantation.png)
-
-### Version Diff (Compare Versions)
-![Compare Versions](screenshots-blackboxtesting/cmparing-versions.png)
-
-### Rollback to Previous Version
-![Rollback](screenshots-blackboxtesting/rollback.png)
-
-### Documentation Before LLM Enhancement
-![Before LLM](screenshots-blackboxtesting/documantation-beforellm.png)
-
-### Edit Documentation
-![Edit Documentation](screenshots-blackboxtesting/edit_documantation.png)
-
-### Export — PDF
-![Exported PDF](screenshots-blackboxtesting/exported-pdf.png)
-
-### Export — Word Document
-![Exported Word](screenshots-blackboxtesting/exported_word-doc.png)
-
-### Export — Markdown
-![Exported Markdown](screenshots-blackboxtesting/exported-markdown.png)
-
-### Repositories Browser
-![Repositories](screenshots-blackboxtesting/repositories.png)
-
-### File in Repository
-![File in Repository](screenshots-blackboxtesting/file-in-repositories.png)
-
-### Commit Documentation to GitHub
-![Commit to GitHub](screenshots-blackboxtesting/commiting-to-github.png)
-
-### Add Contributor
-![Add Contributor](screenshots-blackboxtesting/addcontributor_to_project.png)
-
-### Sign In with GitHub OAuth
-![GitHub OAuth](screenshots-blackboxtesting/signin-with-github.png)
-
-### Validation — Empty Fields
-![Empty Fields](screenshots-blackboxtesting/empty-fileds.png)
-
-### Validation — Short Password
-![Short Password](screenshots-blackboxtesting/Short%20Password_Registration_Validation.png)
-
-### Validation — Wrong Credentials
-![Wrong Credentials](screenshots-blackboxtesting/incorrect-passw-email.png)
 
 ---
 
