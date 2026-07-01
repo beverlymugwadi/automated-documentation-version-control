@@ -237,9 +237,7 @@ All 83 tests should pass in approximately 3.5 seconds with no external dependenc
 | LLM synthesis (GPT-4o-mini) | Improves output quality; built on top of the rule-based/AST pipeline; fully optional |
 | Collaborators with RBAC | Documentation is a team activity; single-user tools have limited real-world adoption |
 | Email notifications | Alerts collaborators automatically when added to a project |
-| Export (PDF, Word, Markdown) | Documentation must be shareable outside the web tool |
 | GitHub OAuth | Reduces sign-up friction for developer users |
-| CommonJS export detection | Real-world JS projects use `module.exports`, not only ES modules |
 | SHA-256 API signature hashing | Prevents false "stale" alerts on formatting-only code commits |
 
 ---
@@ -333,7 +331,7 @@ The ADGVC system was delivered as a fully functional, deployed web application. 
 | Rollback to a previous version | Implemented | `versionService.ts` |
 | Detect divergence between code and documentation | Implemented | `driftService.ts` |
 
-Three capabilities were added beyond the approved proposal: LLM synthesis via GPT-4o-mini to improve output readability; team collaboration with role-based access control (Owner, Editor, Viewer); and multi-format export (PDF, Word, Markdown). Each extends the core system without deviating from the original research goal.
+Two capabilities were added beyond the approved proposal: LLM synthesis via GPT-4o-mini to improve output readability; and team collaboration with role-based access control (Owner, Editor, Viewer). Each extends the core system without deviating from the original research goal.
 
 ### Scope Alignment
 

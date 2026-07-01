@@ -110,6 +110,7 @@ export interface DataStore {
   getProject(projectId: string): Promise<ProjectRec | null>;
   getOrCreateDefaultProject(userId: string, owner?: Author): Promise<ProjectRec>;
   deleteProject(projectId: string): Promise<DeleteSummary>;
+  updateProject(projectId: string, patch: { projectName?: string; description?: string }): Promise<ProjectRec | null>;
   addMember(projectId: string, member: Member): Promise<ProjectRec | null>;
   removeMember(projectId: string, userId: string): Promise<ProjectRec | null>;
 
@@ -179,6 +180,10 @@ class MongoDataStore implements DataStore {
     await SourceCodeFile.deleteMany({ projectId });
     await Project.findByIdAndDelete(projectId);
     return { documents: docs.length, versions, notes, files, docIds };
+  }
+  async updateProject(projectId: string, patch: { projectName?: string; description?: string }): Promise<ProjectRec | null> {
+    const doc = await Project.findByIdAndUpdate(projectId, { $set: patch }, { new: true });
+    return doc ? this.mapProject(doc) : null;
   }
   async addMember(projectId: string, member: Member): Promise<ProjectRec | null> {
     const doc = await Project.findByIdAndUpdate(
@@ -370,6 +375,14 @@ class InMemoryDataStore implements DataStore {
     for (const id of docIds) this.docs.delete(id);
     this.projects.delete(projectId);
     return { documents: docIds.length, versions: versionCount, notes: 0, files: 0, docIds };
+  }
+
+  async updateProject(projectId: string, patch: { projectName?: string; description?: string }): Promise<ProjectRec | null> {
+    const p = this.projects.get(projectId);
+    if (!p) return null;
+    const updated = { ...p, ...patch, updatedAt: now() };
+    this.projects.set(projectId, updated);
+    return updated;
   }
 
   async addMember(projectId: string, member: Member): Promise<ProjectRec | null> {

@@ -15,6 +15,11 @@ const createProjectSchema = z.object({
   repoFullName: z.string().trim().optional(),
 });
 
+const updateProjectSchema = z.object({
+  projectName: z.string().trim().min(1).max(140).optional(),
+  description: z.string().trim().max(1000).optional(),
+});
+
 export const createProject = asyncHandler(async (req: Request, res: Response) => {
   const { projectName, description, repoFullName } = req.body as z.infer<typeof createProjectSchema>;
   const project = await dataStore.createProject({
@@ -70,6 +75,14 @@ export const getProject = asyncHandler(async (req: Request, res: Response) => {
       updatedAt: d.updatedAt,
     })),
   });
+});
+
+export const updateProject = asyncHandler(async (req: Request, res: Response) => {
+  await requireProjectOwner(req.params.projectId, req.user!.userId);
+  const patch = updateProjectSchema.parse(req.body);
+  const project = await dataStore.updateProject(req.params.projectId, patch);
+  if (!project) throw new HttpError(404, 'Project not found');
+  res.json({ project });
 });
 
 export const deleteProject = asyncHandler(async (req: Request, res: Response) => {
@@ -137,4 +150,4 @@ export const removeMember = asyncHandler(async (req: Request, res: Response) => 
   res.json({ members: project?.members ?? [] });
 });
 
-export const schemas = { addMemberSchema };
+export const schemas = { addMemberSchema, updateProjectSchema };

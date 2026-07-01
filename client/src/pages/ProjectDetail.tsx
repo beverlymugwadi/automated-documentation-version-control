@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { FileText, Trash2, GitBranch, ArrowLeft } from 'lucide-react';
-import { Button, Card, Badge } from '../components/ui';
+import { FileText, Trash2, GitBranch, ArrowLeft, Pencil, Check, X } from 'lucide-react';
+import { Button, Card, Badge, Input } from '../components/ui';
 import { LoadingState, ErrorState, EmptyState } from '../components/states/States';
 import { MembersPanel } from '../components/MembersPanel';
 import { DeleteProjectModal } from '../components/DeleteProjectModal';
-import { getProject, deleteProject, type Member } from '../lib/projects';
+import { getProject, deleteProject, updateProject, type Member } from '../lib/projects';
 import { relativeTime } from '../lib/time';
 import { toast } from '../routes/store/toastStore';
 
@@ -18,6 +18,10 @@ export function ProjectDetail() {
   const [members, setMembers] = useState<Member[] | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editName, setEditName] = useState('');
+  const [editDesc, setEditDesc] = useState('');
+  const [saving, setSaving] = useState(false);
 
   if (isLoading) return <div className="container"><LoadingState label="Loading project" /></div>;
   if (isError || !data) return <div className="container"><ErrorState desc="Could not load this project." action={<Button onClick={() => refetch()}>Retry</Button>} /></div>;
@@ -25,6 +29,24 @@ export function ProjectDetail() {
   const { project, documents } = data;
   const memberList = members ?? project.members;
   const isOwner = project.role === 'owner';
+
+  function startEdit() {
+    setEditName(project.projectName);
+    setEditDesc(project.description ?? '');
+    setEditing(true);
+  }
+
+  async function saveEdit() {
+    if (!editName.trim()) return;
+    setSaving(true);
+    try {
+      await updateProject(projectId, { projectName: editName.trim(), description: editDesc.trim() });
+      await qc.invalidateQueries({ queryKey: ['project', projectId] });
+      toast.success('Project updated');
+      setEditing(false);
+    } catch { toast.error('Could not update project'); }
+    finally { setSaving(false); }
+  }
 
   async function onDelete() {
     setDeleting(true);
@@ -43,15 +65,33 @@ export function ProjectDetail() {
       </button>
 
       <div className="row row--between" style={{ alignItems: 'flex-start', gap: 'var(--sp-4)', marginBottom: 'var(--sp-6)', flexWrap: 'wrap' }}>
-        <div>
-          <div className="row" style={{ gap: 'var(--sp-3)' }}>
-            <h1 style={{ fontSize: 'var(--text-2xl)' }}>{project.projectName}</h1>
-            {project.role && <Badge tone={isOwner ? 'signal' : 'neutral'}>{project.role}</Badge>}
-          </div>
-          {project.description && <p className="muted" style={{ marginTop: 'var(--sp-2)' }}>{project.description}</p>}
-          {project.repoFullName && <p className="mono muted" style={{ fontSize: 'var(--text-sm)', marginTop: 4 }}><GitBranch size={12} style={{ verticalAlign: '-2px' }} /> {project.repoFullName}</p>}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          {editing ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--sp-3)', maxWidth: 480 }}>
+              <Input label="Project name" value={editName} onChange={(e) => setEditName(e.target.value)} />
+              <Input label="Description" value={editDesc} onChange={(e) => setEditDesc(e.target.value)} />
+              <div className="row" style={{ gap: 'var(--sp-2)' }}>
+                <Button variant="primary" size="sm" loading={saving} leftIcon={<Check size={14} />} onClick={saveEdit}>Save</Button>
+                <Button variant="ghost" size="sm" leftIcon={<X size={14} />} onClick={() => setEditing(false)}>Cancel</Button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="row" style={{ gap: 'var(--sp-3)', alignItems: 'center' }}>
+                <h1 style={{ fontSize: 'var(--text-2xl)' }}>{project.projectName}</h1>
+                {project.role && <Badge tone={isOwner ? 'signal' : 'neutral'}>{project.role}</Badge>}
+                {isOwner && (
+                  <button className="iconbtn" aria-label="Edit project details" onClick={startEdit} style={{ width: 28, height: 28 }}>
+                    <Pencil size={14} />
+                  </button>
+                )}
+              </div>
+              {project.description && <p className="muted" style={{ marginTop: 'var(--sp-2)' }}>{project.description}</p>}
+              {project.repoFullName && <p className="mono muted" style={{ fontSize: 'var(--text-sm)', marginTop: 4 }}><GitBranch size={12} style={{ verticalAlign: '-2px' }} /> {project.repoFullName}</p>}
+            </>
+          )}
         </div>
-        {isOwner && <Button variant="danger" leftIcon={<Trash2 size={15} />} onClick={() => setConfirmDelete(true)}>Delete project</Button>}
+        {isOwner && !editing && <Button variant="danger" leftIcon={<Trash2 size={15} />} onClick={() => setConfirmDelete(true)}>Delete project</Button>}
       </div>
 
       <div className="workspace">

@@ -5,6 +5,7 @@ import {
   createProject,
   listProjects,
   getProject,
+  updateProject,
   deleteProject,
   listMembers,
   addMember,
@@ -18,6 +19,7 @@ router.use(requireAuth);
 router.post('/', createProject);
 router.get('/', listProjects);
 router.get('/:projectId', getProject);
+router.patch('/:projectId', validateBody(schemas.updateProjectSchema), updateProject);
 router.delete('/:projectId', deleteProject);
 
 router.get('/:projectId/members', listMembers);

@@ -67,6 +67,11 @@ export async function deleteProject(projectId: string): Promise<DeleteSummary> {
   return data.removed;
 }
 
+export async function updateProject(projectId: string, patch: { projectName?: string; description?: string }): Promise<ProjectDetail> {
+  const { data } = await api.patch<{ project: ProjectDetail }>(`/projects/${projectId}`, patch);
+  return data.project;
+}
+
 export async function addMember(projectId: string, identifier: string): Promise<Member[]> {
   const { data } = await api.post<{ members: Member[] }>(`/projects/${projectId}/members`, { identifier });
   return data.members;
