@@ -121,8 +121,8 @@ automated-documentation-version-control/
 ### Step 1 — Clone the Repository
 
 ```bash
-git clone https://github.com/beverlymugwadi/ADGVC.git
-cd ADGVC
+git clone https://github.com/beverlymugwadi/automated-documentation-version-control.git
+cd automated-documentation-version-control.git
 ```
 
 ### Step 2 — Backend Setup
