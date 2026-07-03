@@ -13,7 +13,6 @@ export function GitHubConnectModal({ open, onClose }: Props) {
       open={open}
       title="Connect GitHub"
       onClose={onClose}
-      maxWidth={560}
       footer={
         <>
           <Button variant="ghost" onClick={onClose}>Cancel</Button>
