@@ -15,7 +15,7 @@
 | | |
 |---|---|
 | **Live App** | https://automated-documentation-generator-with-of94.onrender.com |
-| **Demo Video** | [▶ Watch the technical walkthrough](#) ← **ADD YOUR LOOM/YOUTUBE LINK HERE BEFORE SUBMITTING** |
+| **Demo Video** | [https://youtu.be/IAHPnAvjcbo](#) 
 
 > The app runs on Render's free tier — allow 30–60 seconds on first load.
 
@@ -27,7 +27,7 @@ ADGVC addresses a persistent problem in software development: documentation is n
 
 1. **Rule-based engine** — classifies and structures free-text developer notes into documentation sections using weighted keyword and regex matching.
 2. **AST parser** — parses JavaScript/TypeScript source files via `@babel/parser` to extract function signatures, classes, interfaces, Express API surfaces, and React patterns.
-3. **LLM synthesis** (optional) — sends the structured AST and rule output to GPT-4o-mini to produce human-readable prose documentation.
+3. **LLM synthesis** (optional) — sends the structured AST and rule output to AI to produce human-readable prose documentation.
 
 Every generation is saved as a real Git commit in a per-document repository. Versions can be compared side-by-side, rolled back, and exported as PDF, Word, or Markdown. A drift detector alerts developers when linked GitHub source files change.
 
@@ -41,7 +41,7 @@ Every generation is saved as a real Git commit in a per-document repository. Ver
 | **Projects** | Create and manage multiple documentation projects |
 | **Note-based generation** | Paste developer notes → structured documentation via rule engine |
 | **Code-based generation** | Connect GitHub repo, pick a file → documentation via AST parser |
-| **LLM enhancement** | Optional GPT-4o-mini pass for improved readability |
+| **LLM enhancement** | For improved readability |
 | **Version history** | Every save creates a Git commit; full history is browsable |
 | **Version diff** | Side-by-side LCS diff between any two versions |
 | **Rollback** | Restore any previous version (preserves audit trail) |
@@ -92,7 +92,7 @@ automated-documentation-version-control/
 │       │   ├── docComposer.ts       # Combines note + AST output into Markdown
 │       │   ├── driftService.ts      # Three-state drift detector against GitHub
 │       │   ├── versionService.ts    # Git-backed versioning (simple-git)
-│       │   ├── llmSynthesis.ts      # Optional two-pass GPT-4o-mini enhancement
+│       │   ├── llmSynthesis.ts      # Optional two-pass AI enhancement
 │       │   └── exporters/           # PDF (pdfkit), DOCX (docx), Markdown
 │       ├── models/                  # Mongoose schemas (User, Project, Documentation, DocVersion, …)
 │       ├── routes/                  # Express routers
@@ -230,6 +230,7 @@ All 83 tests should pass in approximately 3.5 seconds with no external dependenc
 | Compare versions (diff) | Implemented | `diff.ts` |
 | Roll back to previous version | Implemented | `versionService.ts` |
 | Detect code divergence from documentation | Implemented | `driftService.ts` |
+| Export documentation (PDF, Word, Markdown) | Implemented | `exporters/` |
 
 ### Deviation from the Proposal
 
@@ -239,9 +240,8 @@ The proposal planned comment-based extraction, but this proved unreliable with `
 
 | Feature | Justification |
 |---|---|
-| LLM synthesis (GPT-4o-mini) | Improves output quality; built on top of the rule-based/AST pipeline; fully optional |
+| LLM synthesis | Improves output quality; built on top of the rule-based/AST pipeline; fully optional |
 | Collaborators with RBAC | Documentation is a team activity; single-user tools have limited real-world adoption |
-| Email notifications | Alerts collaborators automatically when added to a project |
 | GitHub OAuth | Reduces sign-up friction for developer users |
 | SHA-256 API signature hashing | Prevents false "stale" alerts on formatting-only code commits |
 
@@ -361,7 +361,7 @@ The ADGVC system was delivered as a fully functional, deployed web application. 
 | Detect divergence between code and documentation | Implemented | `driftService.ts` |
 | Export documentation (PDF, Word, Markdown) | Implemented | `exporters/` |
 
-Two capabilities were added beyond the approved proposal: LLM synthesis via GPT-4o-mini to improve output readability; and team collaboration with role-based access control (Owner, Editor, Viewer). Each extends the core system without deviating from the original research goal.
+Four capabilities were added beyond the approved proposal: LLM synthesis via AI to improve output readability; team collaboration with role-based access control (Owner, Editor, Viewer); GitHub OAuth for reduced sign-up friction; and SHA-256 API signature hashing to prevent false "stale" alerts on formatting-only code commits. Each extends the core system without deviating from the original research goal.
 
 ### Scope Alignment
 
@@ -447,7 +447,7 @@ The two outputs are merged into a single Markdown document. Without an API key t
 
 ## Analysis of Results
 
-All six proposal objectives were fully implemented. Three additional capabilities were added beyond the proposal — LLM synthesis, team collaboration with RBAC, and documentation drift detection each adding measurable value without diverging from the original goal of automating documentation.
+All seven proposal objectives were fully implemented. Four additional capabilities were added beyond the proposal, LLM synthesis, team collaboration with RBAC, GitHub OAuth, and SHA-256 API signature hashing — each adding measurable value without diverging from the original goal of automating documentation.
 
 **83 of 83 tests pass** across unit, integration, and functional test categories. Tests run without any external dependencies using `InMemoryDataStore`. The AST parser and rule-based engine, the two core algorithms, are each covered by multiple deterministic tests with varied inputs.
 
