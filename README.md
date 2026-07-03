@@ -15,7 +15,7 @@
 | | |
 |---|---|
 | **Live App** | https://automated-documentation-generator-with-of94.onrender.com |
-| **Demo Video** | [▶ Watch the technical walkthrough](https://youtu.be/IAHPnAvjcbo) |
+| **Demo Video** | [▶ Watch the video](https://youtu.be/IAHPnAvjcbo) |
 
 > The app runs on Render's free tier — allow 30–60 seconds on first load.
 
