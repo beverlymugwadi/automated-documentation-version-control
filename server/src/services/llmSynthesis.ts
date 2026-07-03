@@ -14,7 +14,7 @@ export interface SynthesisResult {
   documentedCount?: number;
 }
 
-const OPENAI_URL = 'https://api.openai.com/v1/chat/completions';
+const GROQ_URL = 'https://api.groq.com/openai/v1/chat/completions';
 const TIMEOUT_MS = 90_000;
 /** Per-unit source cap: large enough for a full controller action (~200 lines). */
 const SOURCE_CAP = 14_000;
@@ -170,12 +170,12 @@ async function callLLM(
   signal: AbortSignal,
   maxTokens: number,
 ): Promise<string | null> {
-  const res = await fetch(OPENAI_URL, {
+  const res = await fetch(GROQ_URL, {
     method: 'POST',
     signal,
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${env.openai.apiKey}` },
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${env.groq.apiKey}` },
     body: JSON.stringify({
-      model: env.openai.model,
+      model: env.groq.model,
       temperature: 0.2,
       max_tokens: maxTokens,
       messages: [
@@ -187,7 +187,7 @@ async function callLLM(
 
   if (!res.ok) {
     const body = await res.text().catch(() => '');
-    throw new Error(`OpenAI ${res.status}: ${body.slice(0, 200)}`);
+    throw new Error(`Groq ${res.status}: ${body.slice(0, 200)}`);
   }
 
   const data = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };

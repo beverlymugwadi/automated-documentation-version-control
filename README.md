@@ -116,7 +116,7 @@ automated-documentation-version-control/
 - npm v8 or higher
 - MongoDB Atlas account (free tier is sufficient)
 - GitHub account (for OAuth and repo browsing features)
-- OpenAI API key (optional — only required for LLM synthesis)
+- Groq API key (optional — only required for LLM synthesis)
 
 ### Step 1 — Clone the Repository
 
@@ -150,7 +150,7 @@ GITHUB_CALLBACK_URL=http://localhost:4000/api/auth/github/callback
 CLIENT_URL=http://localhost:5173
 ENCRYPTION_KEY=32-character-hex-string-for-token-encryption
 MOCK_MODE=false
-OPENAI_API_KEY=sk-...  # optional — leave blank to disable LLM synthesis
+GROQ_API_KEY=gsk_...  # optional — leave blank to disable LLM synthesis
 ```
 
 > **Quick demo mode:** Set `MOCK_MODE=true` to run the full app without a MongoDB connection. All data is stored in memory.
@@ -287,7 +287,7 @@ All 83 tests should pass in approximately 3.5 seconds with no external dependenc
 | Mixed note types | Each line classified correctly | Pass |
 | Malformed TypeScript | `AstParseError` with line number | Pass |
 | CommonJS file (`auth.js`) | All exports extracted | Pass |
-| No OpenAI key | Rule-based output returned without error | Pass |
+| No Groq key | Rule-based output returned without error | Pass |
 
 ### Performance Across Environments
 
@@ -295,9 +295,9 @@ All 83 tests should pass in approximately 3.5 seconds with no external dependenc
 |---|---|
 | Local — Windows 11, Node 18 | 83 tests pass in ~3.5 s |
 | Local — `MOCK_MODE=true` | Full app runs without MongoDB |
-| Cloud — Render (Ubuntu, Node 18) | Deployed and live |
+| Cloud — Render (Node 18) | Deployed and live |
 | Cloud DB — MongoDB Atlas | Full CRUD confirmed |
-| No OpenAI key | LLM skipped gracefully |
+| No Groq key | LLM skipped gracefully |
 
 ---
 
@@ -320,7 +320,7 @@ The system is deployed on Render's free tier.
 
 ### Core Functionalities Implemented
 
-The ADGVC system was delivered as a fully functional, deployed web application. All six objectives defined in the approved proposal were implemented and are operational in the live system.
+The ADGVC system was delivered as a fully functional, deployed web application. All seven objectives defined in the approved proposal were implemented and are operational in the live system.
 
 | Proposal Objective | Status | Module |
 |---|---|---|
@@ -330,6 +330,7 @@ The ADGVC system was delivered as a fully functional, deployed web application. 
 | Version comparison (diff view) | Implemented | `diff.ts` |
 | Rollback to a previous version | Implemented | `versionService.ts` |
 | Detect divergence between code and documentation | Implemented | `driftService.ts` |
+| Export documentation (PDF, Word, Markdown) | Implemented | `exporters/` |
 
 Two capabilities were added beyond the approved proposal: LLM synthesis via GPT-4o-mini to improve output readability; and team collaboration with role-based access control (Owner, Editor, Viewer). Each extends the core system without deviating from the original research goal.
 
@@ -389,7 +390,7 @@ Every documentation save creates a real Git commit in a per-document repository 
 
 #### 8. Two-Pass LLM Synthesis — `llmSynthesis.ts` (optional)
 
-When an OpenAI API key is configured, structured AST and rule-based output is sent to GPT-4o-mini in two parallel passes:
+When a Groq API key is configured, structured AST and rule-based output is sent to Llama 3.3 70B (via Groq) in two parallel passes:
 
 - **Pass 1 (HEAD):** generates the document-level Overview, How It Fits Together, and Configuration sections from a declaration summary and developer notes.
 - **Pass 2 (UNITS):** generates per-function reference sections (purpose, parameters, responses, returns, throws, side effects, usage example) from per-function fact sheets and source excerpts.
@@ -417,9 +418,9 @@ The two outputs are merged into a single Markdown document. Without an API key t
 
 ## Analysis of Results
 
-All six proposal objectives were fully implemented. Three additional capabilities were added beyond the proposal — LLM synthesis, team collaboration with RBAC, and documentation drift detection — each adding measurable value without diverging from the original goal of automating documentation.
+All six proposal objectives were fully implemented. Three additional capabilities were added beyond the proposal — LLM synthesis, team collaboration with RBAC, and documentation drift detection each adding measurable value without diverging from the original goal of automating documentation.
 
-**83 of 83 tests pass** across unit, integration, and functional test categories. Tests run without any external dependencies using `InMemoryDataStore`. The AST parser and rule-based engine — the two core algorithms — are each covered by multiple deterministic tests with varied inputs.
+**83 of 83 tests pass** across unit, integration, and functional test categories. Tests run without any external dependencies using `InMemoryDataStore`. The AST parser and rule-based engine, the two core algorithms, are each covered by multiple deterministic tests with varied inputs.
 
 The live deployment on Render confirms the system works end-to-end: documentation generates from both notes and real GitHub source files, versions are saved, exports produce valid files, and collaborators can be invited.
 

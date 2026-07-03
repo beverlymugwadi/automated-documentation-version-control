@@ -4,7 +4,7 @@
  *   - Fix 4: no empty parameter tables, void-return omission
  *   - Fix 2: title cross-check (content-derived title vs external label)
  *
- * These tests exercise the AST extractor and the rule-based composer directly,
+ * tests exercise the AST extractor and the rule-based composer directly,
  * which are deterministic and require no network calls.
  */
 import { describe, it, expect } from 'vitest';

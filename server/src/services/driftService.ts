@@ -9,8 +9,6 @@ import type { DocRec, SourceBinding } from '../lib/dataStore';
  *   current               — commitSha matches AND signatureHash matches (or no hash stored yet).
  *   implementation_changed — file changed (new commitSha) but API surface is the same (same signatureHash).
  *   signature_changed      — file changed AND exported signatures differ — docs are likely wrong.
- *
- * The worst-case state across all bound files is surfaced as `worstState` on the result.
  */
 export type DriftState = 'current' | 'implementation_changed' | 'signature_changed';
 

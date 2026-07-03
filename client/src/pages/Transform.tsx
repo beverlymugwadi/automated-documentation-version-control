@@ -250,7 +250,7 @@ export function Transform() {
                   <Wand2 size={13} style={{ verticalAlign: '-2px', marginRight: 5 }} /> AI-enhanced
                 </button>
               ) : (
-                <Tooltip label={llmAvailable ? 'AI synthesis failed for this run' : 'Set OPENAI_API_KEY to enable'}>
+                <Tooltip label={llmAvailable ? 'AI synthesis failed for this run' : 'Set GROQ_API_KEY to enable'}>
                   <button disabled style={{ opacity: 0.45, cursor: 'not-allowed' }}>
                     <Wand2 size={13} style={{ verticalAlign: '-2px', marginRight: 5 }} /> AI-enhanced
                   </button>

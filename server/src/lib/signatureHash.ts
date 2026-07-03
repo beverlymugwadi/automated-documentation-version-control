@@ -1,16 +1,6 @@
 import crypto from 'node:crypto';
 import type { ParsedFile, ParsedParam } from '../services/astParser';
 
-/**
- * Produce a deterministic string that captures all exported function/method
- * signatures (name, params, return type) — sorted and normalised so that:
- *   • whitespace / comment changes → SAME hash
- *   • renamed param / added param / changed return type → DIFFERENT hash
- *
- * Only exported declarations are included; internal helpers are ignored because
- * a caller cannot observe their signature change.
- */
-
 export interface SignatureEntry {
   name: string;
   /** Normalised serialisation used for comparison. */

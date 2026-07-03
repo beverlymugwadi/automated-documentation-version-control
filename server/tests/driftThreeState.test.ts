@@ -4,10 +4,7 @@ import { computeSignatureHash } from '../src/lib/signatureHash';
 
 /**
  * The drift three-state logic lives in driftService.checkDrift() which calls
- * getFileSha and getFile from githubService.  We unit-test the DECISION logic
- * directly here — the same branching that checkDrift() follows — to keep these
- * tests fast and offline (no real GitHub calls).
- *
+ * getFileSha and getFile from githubService. 
  * Decision rules (mirrors driftService.ts exactly):
  *   commitSha unchanged                     → "current"
  *   commitSha changed, hash unchanged       → "implementation_changed"

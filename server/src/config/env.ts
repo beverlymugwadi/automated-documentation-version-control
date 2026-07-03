@@ -36,11 +36,11 @@ export const env = {
   },
   emailConfigured: Boolean(process.env.SMTP_HOST && process.env.SMTP_USER),
 
-  openai: {
-    apiKey: process.env.OPENAI_API_KEY ?? '',
-    model: process.env.OPENAI_MODEL ?? 'gpt-4o-mini',
+  groq: {
+    apiKey: process.env.GROQ_API_KEY ?? '',
+    model: process.env.GROQ_MODEL ?? 'llama-3.3-70b-versatile',
   },
-  llmAvailable: Boolean(process.env.OPENAI_API_KEY),
+  llmAvailable: Boolean(process.env.GROQ_API_KEY),
 
   githubConfigured,
 } as const;

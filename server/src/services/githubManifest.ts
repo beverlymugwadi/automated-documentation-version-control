@@ -1,24 +1,3 @@
-/**
- * githubManifest.ts — atomic multi-file GitHub commit via the Git Trees API.
- *
- * Why not the Contents API?
- *   PUT /repos/{owner}/{repo}/contents/{path} writes exactly ONE file per call,
- *   producing one commit per file.  Writing the doc + manifest atomically in a
- *   single commit requires the lower-level Git Trees API:
- *     1. Create a tree blob for every file to write.
- *     2. POST /git/trees  → new tree SHA referencing the base tree + new blobs.
- *     3. POST /git/commits → new commit SHA pointing to the new tree.
- *     4. PATCH /git/refs/heads/{branch} → advance the branch head.
- *
- * Note on webhooks:
- *   A production deployment would expose POST /api/webhooks/github so GitHub can
- *   push change events directly, eliminating the polling loop.  This requires a
- *   publicly reachable URL (ngrok / tunnel in dev, a real host in prod).  The
- *   webhook endpoint stub lives in server/src/controllers/webhooks.controller.ts
- *   and is intentionally left un-wired; polling (driftService.ts) handles the
- *   demo use-case.
- */
-
 import { getDefaultBranch } from './githubService';
 
 const API = 'https://api.github.com';

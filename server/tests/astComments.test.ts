@@ -4,8 +4,6 @@ import { parseFile } from '../src/services/astParser';
 // ---------------------------------------------------------------------------
 // Sample source that exercises every comment path we care about:
 //   - JSDoc block with @param, @returns, @example, @deprecated
-//   - Plain line comments on a function
-//   - Inline // comment inside a function body
 //   - Class with a JSDoc block on the class + a method
 // ---------------------------------------------------------------------------
 const SAMPLE = `

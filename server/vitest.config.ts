@@ -8,7 +8,7 @@ export default defineConfig({
     // never touch the real database or call external APIs, regardless of .env.
     env: {
       MOCK_MODE: 'true',
-      OPENAI_API_KEY: '',
+      GROQ_API_KEY: '',
     },
   },
 });
