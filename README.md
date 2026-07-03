@@ -26,7 +26,7 @@
 ADGVC addresses a persistent problem in software development: documentation is neglected, becomes outdated, and quickly falls out of sync with the code it describes. The system automates documentation generation through three complementary approaches:
 
 1. **Rule-based engine** — classifies and structures free-text developer notes into documentation sections using weighted keyword and regex matching.
-2. **AST parser** — parses JavaScript/TypeScript source files via `@babel/parser` to extract function signatures, classes, interfaces, JSDoc, Express API surfaces, and React patterns.
+2. **AST parser** — parses JavaScript/TypeScript source files via `@babel/parser` to extract function signatures, classes, interfaces, Express API surfaces, and React patterns.
 3. **LLM synthesis** (optional) — sends the structured AST and rule output to GPT-4o-mini to produce human-readable prose documentation.
 
 Every generation is saved as a real Git commit in a per-document repository. Versions can be compared side-by-side, rolled back, and exported as PDF, Word, or Markdown. A drift detector alerts developers when linked GitHub source files change.
@@ -103,7 +103,8 @@ automated-documentation-version-control/
 │           └── dataStore.ts         # In-memory store (MOCK_MODE) + MongoDB adapter
 │
 ├── server/tests/                    # Vitest test suite (83 tests, 10 files)
-└── screenshots-blackboxtesting/     # Black-box testing evidence (24 screenshots)
+└── screenshots/                     # Testing evidence: 1 unit/integration test run,
+                                      # 24 black-box manual testing screenshots
 ```
 
 ---
@@ -207,7 +208,7 @@ All 83 tests should pass in approximately 3.5 seconds with no external dependenc
 | Algorithm | File | Description |
 |---|---|---|
 | Rule-based note classifier | `noteEngine.ts` | Scores each input line against 7 rules using keyword + regex matches (weighted 1.0–1.4). Single-pass O(n). |
-| AST code parser | `astParser.ts` | `@babel/parser` builds an AST; custom `@babel/traverse` visitor extracts functions, classes, interfaces, JSDoc, Express surfaces, React patterns, env vars, throws. |
+| AST code parser | `astParser.ts` | `@babel/parser` builds an AST; custom `@babel/traverse` visitor extracts functions, classes, interfaces, Express surfaces, React patterns, env vars, throws. |
 | File role classifier | `classifier.ts` | Detects whether a parsed file is a React component, hook, API route, Next.js page/layout, utility, or type module — using AST patterns. |
 | LCS line diff | `diff.ts` | Custom Longest Common Subsequence implementation. Produces typed `add / del / context` hunks consumed by the diff UI. |
 | SHA-256 signature hash | `signatureHash.ts` | Serialises exported function signatures, sorts, joins, and hashes with SHA-256. Stable across formatting; changes only when the API contract changes. |
@@ -229,6 +230,10 @@ All 83 tests should pass in approximately 3.5 seconds with no external dependenc
 | Compare versions (diff) | Implemented | `diff.ts` |
 | Roll back to previous version | Implemented | `versionService.ts` |
 | Detect code divergence from documentation | Implemented | `driftService.ts` |
+
+### Deviation from the Proposal
+
+The proposal planned comment-based extraction, but this proved unreliable with `@babel/parser`, so the system instead extracts documentation from code structure (functions, classes, interfaces, exports) via AST traversal.
 
 ### Delivered Beyond the Proposal
 
@@ -252,7 +257,7 @@ All 83 tests should pass in approximately 3.5 seconds with no external dependenc
 |---|---|---|
 | `noteEngine.test.ts` | Rule-based classifier section detection | 6 |
 | `astParser.test.ts` | AST function, class, and interface extraction | 10 |
-| `astComments.test.ts` | JSDoc comment parsing and extraction | 11 |
+| `astComments.test.ts` | extracts information from a TypeScript file | 11 |
 | `classifier.test.ts` | File role detection (React, hook, API, util, types) | 8 |
 | `driftThreeState.test.ts` | Three-state drift classification logic | 6 |
 | `signatureHash.test.ts` | SHA hash stability and change detection | 7 |
@@ -266,16 +271,40 @@ All 83 tests should pass in approximately 3.5 seconds with no external dependenc
 
 **Generate docs → Save version → Compute diff → Rollback → Export PDF + Export DOCX**
 
+Unit and integration test run evidence:
+
+![Unit and integration tests passing](screenshots/integration%20and%20unit%20testing.png)
+
 ### Black-Box Testing (Manual Browser)
 
-| Area | Scenarios Tested |
-|---|---|
-| Auth | Sign in, GitHub OAuth, wrong password, empty fields, short password |
-| Projects | Create project, add collaborator, confirm member list |
-| Docs | Generate from notes, generate from GitHub file, view output, edit inline |
-| Versions | Compare versions (diff view), rollback to v1, confirm version numbers |
-| Export | PDF, Word, Markdown — all verified with screenshots |
-| GitHub | Browse repos, browse files, commit documentation to GitHub |
+24 manual black-box test scenarios were run against the live application, each captured as a screenshot in [`screenshots/`](screenshots/).
+
+| Area | Scenario | Screenshot |
+|---|---|---|
+| Auth | Welcome / landing page | [welcome_page.png](screenshots/welcome_page.png) |
+| Auth | Sign in page | [signin_page.png](screenshots/signin_page.png) |
+| Auth | Sign in with GitHub OAuth | [signin-with-github.png](screenshots/signin-with-github.png) |
+| Auth | Wrong email/password error | [incorrect-passw-email.png](screenshots/incorrect-passw-email.png) |
+| Auth | Empty required fields validation | [empty-fileds.png](screenshots/empty-fileds.png) |
+| Auth | Short password registration validation | [Short Password_Registration_Validation.png](<screenshots/Short Password_Registration_Validation.png>) |
+| Projects | Dashboard after login | [dashboard.png](screenshots/dashboard.png) |
+| Projects | Project created | [project-created.png](screenshots/project-created.png) |
+| Projects | Add a collaborator | [addcontributor_to_project.png](screenshots/addcontributor_to_project.png) |
+| Projects | Collaborator added / confirmed | [contributor added.png](<screenshots/contributor added.png>) |
+| GitHub | Browse repositories | [repositories.png](screenshots/repositories.png) |
+| GitHub | Browse files in a repository | [file-in-repositories.png](screenshots/file-in-repositories.png) |
+| GitHub | Commit documentation to GitHub | [commiting-to-github.png](screenshots/commiting-to-github.png) |
+| Docs | Generate documentation (from notes / from file) | [document-generation.png](screenshots/document-generation.png) |
+| Docs | Generated documentation output | [generated-documantation.png](screenshots/generated-documantation.png) |
+| Docs | Documentation before LLM enhancement pass | [documantation-beforellm.png](screenshots/documantation-beforellm.png) |
+| Docs | Edit documentation inline | [edit_documantation.png](screenshots/edit_documantation.png) |
+| Docs | Markdown preview | [markdown_preview.png](screenshots/markdown_preview.png) |
+| Versions | Compare versions (diff view) | [cmparing-versions.png](screenshots/cmparing-versions.png) |
+| Versions | Documentation with diff versions | [documantation and diff versions.png](<screenshots/documantation and diff versions.png>) |
+| Versions | Rollback to a previous version | [rollback.png](screenshots/rollback.png) |
+| Export | Export to PDF | [exported-pdf.png](screenshots/exported-pdf.png) |
+| Export | Export to Word (.docx) | [exported_word-doc.png](screenshots/exported_word-doc.png) |
+| Export | Export to Markdown | [exported-markdown.png](screenshots/exported-markdown.png) |
 
 ### Varied Data Values
 
@@ -340,7 +369,7 @@ The implemented system aligns precisely with the scope boundaries stated in the 
 
 ### Algorithms and Custom Logic
 
-Seven distinct algorithms underpin the system. Each is custom-built or custom-configured rather than delegated to a third-party library.
+Eight distinct algorithms underpin the system. Each is custom-built or custom-configured rather than delegated to a third-party library.
 
 #### 1. Rule-Based Note Classifier — `noteEngine.ts`
 
@@ -353,7 +382,7 @@ Source code is parsed using `@babel/parser` with the `typescript`, `jsx`, `class
 - Function declarations, arrow functions, and class methods
 - TypeScript interfaces and type aliases
 - ES module exports and CommonJS `exports.*` / `module.exports.*` patterns
-- Import groups, JSDoc comments parsed into `{ description, params, returns, route, access, deprecated }`, and inline comments
+- Import groups
 - Throw statements and environment variable references (`process.env.*`)
 - Express handler API surfaces (body fields, path params, query params, response shapes)
 - React hooks and JSX elements
@@ -403,7 +432,7 @@ The two outputs are merged into a single Markdown document. Without an API key t
 |---|---|---|
 | `noteEngine.test.ts` | Rule-based classifier sections | 6 |
 | `astParser.test.ts` | AST function/class/interface extraction | 10 |
-| `astComments.test.ts` | JSDoc comment extraction | 11 |
+| `astComments.test.ts` | extracts information from a TypeScript file | 11 |
 | `classifier.test.ts` | File role detection | 8 |
 | `driftThreeState.test.ts` | Three-state drift classifier | 6 |
 | `signatureHash.test.ts` | SHA hash stability and change detection | 7 |
