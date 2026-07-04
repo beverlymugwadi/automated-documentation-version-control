@@ -9,9 +9,10 @@ export interface ModalProps {
   onClose: () => void;
   children: ReactNode;
   footer?: ReactNode;
+  maxWidth?: number;
 }
 
-export function Modal({ open, title, onClose, children, footer }: ModalProps) {
+export function Modal({ open, title, onClose, children, footer, maxWidth }: ModalProps) {
   useEffect(() => {
     if (!open) return undefined;
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
@@ -27,7 +28,13 @@ export function Modal({ open, title, onClose, children, footer }: ModalProps) {
 
   return createPortal(
     <div className="ui-overlay" onMouseDown={(e) => { if (e.target === e.currentTarget) onClose(); }}>
-      <div className="ui-modal" role="dialog" aria-modal="true" aria-label={typeof title === 'string' ? title : undefined}>
+      <div
+        className="ui-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-label={typeof title === 'string' ? title : undefined}
+        style={maxWidth ? { maxWidth } : undefined}
+      >
         <div className="ui-modal__head">
           <h2 className="ui-modal__title">{title}</h2>
           <Button variant="ghost" size="sm" iconOnly onClick={onClose} aria-label="Close dialog">
