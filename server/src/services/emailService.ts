@@ -1,27 +1,32 @@
 import nodemailer from 'nodemailer';
+import { promises as dnsPromises } from 'dns';
 import { env } from '../config/env';
 
-function makeTransport() {
-  if (!env.emailConfigured) {
-    console.log('[email] SMTP not configured at startup — emailConfigured=false (SMTP_HOST/SMTP_USER missing)');
-    return null;
-  }
+if (!env.emailConfigured) {
+  console.log('[email] SMTP not configured at startup — emailConfigured=false (SMTP_HOST/SMTP_USER missing)');
+} else {
   console.log(`[email] SMTP configured at startup — host=${env.smtp.host} port=${env.smtp.port} user=${env.smtp.user}`);
-  return nodemailer.createTransport({
-    host: env.smtp.host,
-    port: env.smtp.port,
-    secure: env.smtp.port === 465,
-    auth: { user: env.smtp.user, pass: env.smtp.pass },
-    // Fail fast instead of hanging on the default ~2 minute nodemailer timeouts —
-    // makes network-level blocks (e.g. a host blocking outbound SMTP) show up
-    // in logs within seconds rather than looking like nothing happened at all.
-    connectionTimeout: 10_000,
-    greetingTimeout: 10_000,
-    socketTimeout: 10_000,
-  });
 }
 
-const transport = makeTransport();
+/**
+ * Some container hosts (e.g. Render) report a local network interface with
+ * IPv6 support even though there is no actual outbound IPv6 route. Nodemailer
+ * does its own dual-stack DNS resolution and decides whether to try IPv6 based
+ * on os.networkInterfaces() rather than real reachability, so it can pick an
+ * unreachable AAAA address for smtp.gmail.com and fail with ENETUNREACH.
+ * Resolving the A record ourselves and connecting to the literal IPv4 address
+ * bypasses that resolver entirely (a literal IP short-circuits it); the real
+ * hostname is kept only for TLS SNI / certificate validation via `servername`.
+ */
+async function resolveIPv4(hostname: string): Promise<string> {
+  try {
+    const addresses = await dnsPromises.resolve4(hostname);
+    return addresses[0] ?? hostname;
+  } catch (err) {
+    console.warn(`[email] could not resolve A record for ${hostname}, connecting by hostname instead:`, (err as Error).message);
+    return hostname;
+  }
+}
 
 export async function sendCollaboratorInvite(opts: {
   toEmail: string;
@@ -30,14 +35,28 @@ export async function sendCollaboratorInvite(opts: {
   invitedByName: string;
   projectUrl: string;
 }): Promise<void> {
-  if (!transport) {
+  if (!env.emailConfigured) {
     console.log(`[email] SMTP not configured — skipping invite to ${opts.toEmail}`);
     return;
   }
 
   const { toEmail, toName, projectName, invitedByName, projectUrl } = opts;
 
-  console.log(`[email] attempting invite to ${toEmail} via ${env.smtp.host}:${env.smtp.port}`);
+  const host = await resolveIPv4(env.smtp.host);
+  const transport = nodemailer.createTransport({
+    host,
+    port: env.smtp.port,
+    secure: env.smtp.port === 465,
+    auth: { user: env.smtp.user, pass: env.smtp.pass },
+    tls: { servername: env.smtp.host },
+    // Fail fast instead of hanging on the default ~2 minute nodemailer timeouts —
+    // makes network-level blocks show up in logs within seconds.
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 10_000,
+  });
+
+  console.log(`[email] attempting invite to ${toEmail} via ${env.smtp.host} (${host}):${env.smtp.port}`);
 
   await transport.sendMail({
     from: `"ADGVC" <${env.smtp.user}>`,
