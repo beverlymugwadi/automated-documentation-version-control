@@ -2,12 +2,22 @@ import nodemailer from 'nodemailer';
 import { env } from '../config/env';
 
 function makeTransport() {
-  if (!env.emailConfigured) return null;
+  if (!env.emailConfigured) {
+    console.log('[email] SMTP not configured at startup — emailConfigured=false (SMTP_HOST/SMTP_USER missing)');
+    return null;
+  }
+  console.log(`[email] SMTP configured at startup — host=${env.smtp.host} port=${env.smtp.port} user=${env.smtp.user}`);
   return nodemailer.createTransport({
     host: env.smtp.host,
     port: env.smtp.port,
     secure: env.smtp.port === 465,
     auth: { user: env.smtp.user, pass: env.smtp.pass },
+    // Fail fast instead of hanging on the default ~2 minute nodemailer timeouts —
+    // makes network-level blocks (e.g. a host blocking outbound SMTP) show up
+    // in logs within seconds rather than looking like nothing happened at all.
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 10_000,
   });
 }
 
@@ -26,6 +36,8 @@ export async function sendCollaboratorInvite(opts: {
   }
 
   const { toEmail, toName, projectName, invitedByName, projectUrl } = opts;
+
+  console.log(`[email] attempting invite to ${toEmail} via ${env.smtp.host}:${env.smtp.port}`);
 
   await transport.sendMail({
     from: `"ADGVC" <${env.smtp.user}>`,

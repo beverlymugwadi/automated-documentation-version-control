@@ -139,7 +139,14 @@ export const addMember = asyncHandler(async (req: Request, res: Response) => {
     projectName: project?.projectName ?? 'a project',
     invitedByName: inviterName,
     projectUrl,
-  }).catch((err) => console.error('[email] collaborator invite failed:', err));
+  }).catch((err) =>
+    console.error('[email] collaborator invite failed:', {
+      message: err?.message,
+      code: err?.code,
+      command: err?.command,
+      response: err?.response,
+    }),
+  );
 
   res.status(201).json({ members: project?.members ?? [] });
 });
