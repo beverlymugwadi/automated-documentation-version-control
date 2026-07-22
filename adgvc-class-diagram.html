@@ -1,0 +1,501 @@
+<title>ADGVC — Class Diagram (Fig. 3.5)</title>
+<style>
+  :root {
+    --ink: #1B2333;
+    --muted: #5B647A;
+    --paper: #EEF1F6;
+    --surface: #FFFFFF;
+    --border: #D3D9E3;
+    --steel: #3D5A80;
+    --steel-fill: #DCE7F0;
+    --bronze: #9C6B2E;
+    --bronze-fill: #F3E7D2;
+    --line: #5B6478;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ink: #E8EAF0;
+      --muted: #98A2B8;
+      --paper: #10141C;
+      --surface: #171C27;
+      --border: #2A3140;
+      --steel: #85AED2;
+      --steel-fill: #22364A;
+      --bronze: #DDAD5E;
+      --bronze-fill: #3A2E17;
+      --line: #7C879C;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ink: #E8EAF0;
+    --muted: #98A2B8;
+    --paper: #10141C;
+    --surface: #171C27;
+    --border: #2A3140;
+    --steel: #85AED2;
+    --steel-fill: #22364A;
+    --bronze: #DDAD5E;
+    --bronze-fill: #3A2E17;
+    --line: #7C879C;
+  }
+  :root[data-theme="light"] {
+    --ink: #1B2333;
+    --muted: #5B647A;
+    --paper: #EEF1F6;
+    --surface: #FFFFFF;
+    --border: #D3D9E3;
+    --steel: #3D5A80;
+    --steel-fill: #DCE7F0;
+    --bronze: #9C6B2E;
+    --bronze-fill: #F3E7D2;
+    --line: #5B6478;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: ui-sans-serif, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .mono {
+    font-family: ui-monospace, "Cascadia Code", "SF Mono", Consolas, "Roboto Mono", monospace;
+  }
+
+  main {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 56px 32px 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 36px;
+  }
+
+  header {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 28px;
+  }
+
+  .eyebrow {
+    font-family: ui-monospace, "Cascadia Code", "SF Mono", Consolas, monospace;
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--steel);
+    font-weight: 600;
+  }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(28px, 4vw, 38px);
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+
+  .subtitle {
+    max-width: 66ch;
+    color: var(--muted);
+    font-size: 15.5px;
+  }
+
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 22px;
+    margin-top: 6px;
+    font-size: 12.5px;
+    color: var(--muted);
+  }
+
+  .meta-row span b { color: var(--ink); font-weight: 600; }
+
+  .diagram-wrap { display: flex; flex-direction: column; gap: 10px; }
+
+  .diagram-card {
+    position: relative;
+    background: #FDFCF9;
+    border: 1px solid #C9CDD6;
+    border-radius: 3px;
+    padding: 28px 26px 20px;
+    overflow-x: auto;
+    box-shadow: 0 1px 2px rgba(20, 24, 38, 0.06), 0 10px 30px -18px rgba(20, 24, 38, 0.35);
+    background-image:
+      linear-gradient(rgba(61, 90, 128, 0.055) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(61, 90, 128, 0.055) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  .diagram-card::before, .diagram-card::after {
+    content: "";
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border-color: #97A0B3;
+    border-style: solid;
+  }
+  .diagram-card::before { top: 8px; left: 8px; border-width: 2px 0 0 2px; }
+  .diagram-card::after { bottom: 8px; right: 8px; border-width: 0 2px 2px 0; }
+
+  .diagram-card pre.mermaid { min-width: 1480px; margin: 0; }
+
+  .fig-caption {
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    font-size: 12.5px;
+    color: var(--muted);
+    padding: 0 2px;
+  }
+  .fig-caption .rev { font-family: ui-monospace, "Cascadia Code", "SF Mono", Consolas, monospace; }
+
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 22px;
+    padding: 16px 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 13px;
+  }
+
+  .legend-item { display: flex; align-items: center; gap: 8px; color: var(--ink); }
+  .swatch { width: 13px; height: 13px; border-radius: 3px; flex: none; border: 1.5px solid var(--line); }
+  .swatch.entity { background: var(--steel-fill); border-color: var(--steel); }
+  .swatch.service { background: var(--bronze-fill); border-color: var(--bronze); }
+  .line-sample { width: 20px; height: 0; border-top: 1.5px solid var(--line); }
+  .line-sample.dashed { border-top-style: dashed; }
+
+  section h2 {
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--muted);
+    margin: 0 0 14px;
+  }
+
+  .callout {
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--bronze);
+    border-radius: 6px;
+    background: var(--surface);
+    padding: 16px 20px;
+    font-size: 14px;
+  }
+  .callout b { font-weight: 600; }
+  .callout .was { color: var(--muted); text-decoration: line-through; }
+  .callout code {
+    font-family: ui-monospace, "Cascadia Code", "SF Mono", Consolas, monospace;
+    background: var(--bronze-fill);
+    color: var(--bronze);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 12.5px;
+  }
+
+  .fixes {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    overflow: hidden;
+  }
+
+  .fix-row {
+    display: grid;
+    grid-template-columns: 170px 1fr;
+    gap: 18px;
+    padding: 14px 20px;
+    font-size: 14px;
+  }
+  .fix-row:not(:last-child) { border-bottom: 1px solid var(--border); }
+
+  .fix-tag {
+    font-family: ui-monospace, "Cascadia Code", "SF Mono", Consolas, monospace;
+    font-size: 11.5px;
+    letter-spacing: 0.04em;
+    color: var(--steel);
+    text-transform: uppercase;
+    align-self: start;
+    padding-top: 2px;
+  }
+
+  .fix-body { color: var(--ink); }
+  .fix-body b { font-weight: 600; }
+  .fix-body .was { color: var(--muted); text-decoration: line-through; }
+
+  footer {
+    font-size: 12.5px;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    padding-top: 18px;
+  }
+  footer code {
+    font-family: ui-monospace, "Cascadia Code", "SF Mono", Consolas, monospace;
+    background: var(--steel-fill);
+    color: var(--steel);
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 12px;
+  }
+
+  @media (max-width: 640px) {
+    main { padding: 40px 18px 60px; }
+    .fix-row { grid-template-columns: 1fr; gap: 4px; }
+  }
+</style>
+
+<main>
+  <header>
+    <div class="eyebrow">ADGVC — Chapter 3.5, Fig. 3.5</div>
+    <h1>Class diagram</h1>
+    <p class="subtitle">
+      Data entities and processing-layer classes for the Automated Documentation Generator
+      with Version Control. Component names match Section 3.4 (System Architecture) exactly:
+      Rule-Based Processing Engine, AST Parser Engine, Documentation Generator, Version
+      Control Service, Drift Detector, Export Module, Auth Service. Entity attributes are
+      verified against the implemented Mongoose schemas — this figure is self-contained and
+      may be read independently of the ERD in Fig. 3.8.
+    </p>
+    <div class="meta-row">
+      <span>Entities: <b>6</b></span>
+      <span>Processing classes: <b>10</b></span>
+      <span>Revision: <b class="mono">v3 — 2026‑07‑19</b></span>
+    </div>
+  </header>
+
+  <div class="diagram-wrap">
+    <div class="diagram-card">
+<pre class="mermaid">
+%%{init: {
+  "theme": "base",
+  "themeVariables": {
+    "primaryColor": "#EEF1F6",
+    "primaryTextColor": "#1B2333",
+    "primaryBorderColor": "#8E96A8",
+    "lineColor": "#6A7286",
+    "secondaryColor": "#F3E7D2",
+    "tertiaryColor": "#FDFCF9",
+    "fontFamily": "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
+    "fontSize": "13px"
+  }
+}}%%
+classDiagram
+    direction LR
+
+    class User {
+        +ObjectId userId
+        +String fullName
+        +String email
+        -String passwordHash
+        +String githubId
+        -String githubAccessToken
+        +String avatarUrl
+        +Date createdAt
+    }
+
+    class Project {
+        +ObjectId projectId
+        +ObjectId userId
+        +String projectName
+        +String description
+        +String repoFullName
+        +Member[] members
+        +Date createdAt
+    }
+
+    class DeveloperNote {
+        +ObjectId noteId
+        +ObjectId projectId
+        +String content
+        +Date createdAt
+    }
+
+    class SourceCodeFile {
+        +ObjectId fileId
+        +ObjectId projectId
+        +String fileName
+        +String fileType
+        +String fileContent
+        +Date createdAt
+    }
+
+    class Documentation {
+        +ObjectId docId
+        +ObjectId projectId
+        +String title
+        +String content
+        +Number currentVersion
+        +String sourceRepo
+        +SourceBinding[] sourceBindings
+        +Date generatedAt
+    }
+
+    class DocVersion {
+        +ObjectId versionId
+        +ObjectId docId
+        +Number versionNo
+        +String commitHash
+        +String content
+        +String source
+        +ObjectId authorId
+        +Date createdAt
+    }
+
+    class AuthService {
+        +registerUser(input) AuthResult
+        +loginUser(input) AuthResult
+        +getCurrentUser(userId) PublicUser
+    }
+
+    class RuleBasedProcessingEngine {
+        +processNotes(notes) NoteResult
+    }
+
+    class ASTParserEngine {
+        +parseFile(name, content) ParsedFile
+        +parseFiles(files) ParsedFile[]
+        +classifyFile(file) Classification
+    }
+
+    class DocumentationGenerator {
+        +compose(input) ComposeResult
+    }
+
+    class LlmSynthesis {
+        +synthesize(structure, files) SynthResult
+    }
+
+    class SignatureHash {
+        +computeSignatureHash(parsed) String
+        +diffSignatures(old, next) String[]
+    }
+
+    class DriftDetector {
+        +checkDrift(doc, token) DriftResult
+    }
+
+    class VersionControlService {
+        +saveDocVersion(docId, content, msg) DocVersion
+        +compareVersions(a, b) Diff
+    }
+
+    class ExportModule {
+        +exportPdf(content, meta) Buffer
+        +exportDocx(content, meta) Buffer
+    }
+
+    class GitHubIntegrationService {
+        +listRepos(token) GhRepo[]
+        +getFile(token, owner, repo, path) FileContent
+        +commitDocWithManifest(token, args) CommitResult
+    }
+
+    User "1" --> "0..*" Project : owns
+    User "0..*" --> "0..*" Project : member of
+    Project "1" --> "0..*" DeveloperNote
+    Project "1" --> "0..*" SourceCodeFile
+    Project "1" --> "0..*" Documentation
+    Documentation "1" --> "0..*" DocVersion
+
+    AuthService ..> User : reads / writes
+    DocumentationGenerator ..> RuleBasedProcessingEngine : uses
+    DocumentationGenerator ..> ASTParserEngine : uses
+    DocumentationGenerator ..> Documentation : produces
+    LlmSynthesis ..> Documentation : enhances
+    VersionControlService ..> DocVersion : creates
+    VersionControlService ..> Documentation : updates
+    DriftDetector ..> SignatureHash : uses
+    DriftDetector ..> ASTParserEngine : uses
+    DriftDetector ..> GitHubIntegrationService : uses
+    DriftDetector ..> Documentation : reads
+    ExportModule ..> Documentation : reads
+    GitHubIntegrationService ..> DocVersion : commits to
+
+    class User:::entity
+    class Project:::entity
+    class DeveloperNote:::entity
+    class SourceCodeFile:::entity
+    class Documentation:::entity
+    class DocVersion:::entity
+
+    class AuthService:::service
+    class RuleBasedProcessingEngine:::service
+    class ASTParserEngine:::service
+    class DocumentationGenerator:::service
+    class LlmSynthesis:::service
+    class SignatureHash:::service
+    class DriftDetector:::service
+    class VersionControlService:::service
+    class ExportModule:::service
+    class GitHubIntegrationService:::service
+
+    classDef entity fill:#DCE7F0,stroke:#3D5A80,stroke-width:1.5px,color:#1B2333
+    classDef service fill:#F3E7D2,stroke:#9C6B2E,stroke-width:1.5px,color:#1B2333
+</pre>
+    </div>
+    <div class="fig-caption">
+      <span>Fig. 3.5 — Class diagram: data entities and processing-layer classes.</span>
+      <span class="rev">server/src/{models,services,controllers,lib}</span>
+    </div>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item"><span class="swatch entity"></span> Entity — Mongoose model, attributes only</div>
+    <div class="legend-item"><span class="swatch service"></span> Processing class — stateless service module</div>
+    <div class="legend-item"><span class="line-sample"></span> Association — schema reference (<span class="mono">ref:</span>)</div>
+    <div class="legend-item"><span class="line-sample dashed"></span> Dependency — one class calls/uses another</div>
+  </div>
+
+  <section>
+    <h2>Before you submit — FR12 doesn't match the implementation</h2>
+    <div class="callout">
+      Section 1.3.1 / 3.3 states: <span class="was">"…invite collaborators and assign them Editor, or Viewer roles."</span>
+      The codebase only implements two roles — <code>owner</code> and <code>editor</code>
+      (<code>Project.ts</code> schema, <code>addMemberSchema</code> in <code>projects.controller.ts</code>).
+      There is no read-only Viewer role anywhere in the system. Suggested replacement text
+      for FR12: <b>"The system shall allow a project owner to invite collaborators and assign
+      them the Editor role."</b> This diagram reflects that correction — the <code>Member.role</code>
+      field above is typed <code>'owner' | 'editor'</code> only.
+    </div>
+  </section>
+
+  <section>
+    <h2>Class-by-class alignment with Section 3.4 / 3.5</h2>
+    <div class="fixes">
+      <div class="fix-row">
+        <div class="fix-tag">Naming</div>
+        <div class="fix-body">Every processing class is named exactly as Section 3.4 names it — <b>Rule-Based Processing Engine</b>, <b>AST Parser Engine</b>, <b>Documentation Generator</b>, <b>Version Control Service</b>, <b>Export Module</b>, <b>Auth Service</b> — plus <b>Drift Detector</b>, named in the Fig. 3.2 proposed-model narrative and required by FR10.</div>
+      </div>
+      <div class="fix-row">
+        <div class="fix-tag">Entities</div>
+        <div class="fix-body">Fields verified against the actual Mongoose schemas: <span class="was">SourceCodeFile.language/.content</span> → <b>fileType/fileContent</b>; <span class="was">Documentation.documentId/.markdown</span> → <b>docId/content</b>; added <b>Project.members[]</b> and <b>Documentation.sourceBindings[]</b>, both required for FR12 collaboration and FR10 drift detection respectively.</div>
+      </div>
+      <div class="fix-row">
+        <div class="fix-tag">New entity</div>
+        <div class="fix-body"><b>DocVersion</b> added as its own class — it is the actual immutable snapshot behind FR7/FR8/FR9 (save, diff, rollback), distinct from the Version Control Service that operates on it.</div>
+      </div>
+      <div class="fix-row">
+        <div class="fix-tag">FR coverage</div>
+        <div class="fix-body">Every class on this diagram maps to a stated FR: Auth Service → FR1; Rule-Based Engine → FR3; AST Parser Engine → FR4; Documentation Generator + LLM Synthesis → FR5; Version Control Service → FR6/FR7/FR8/FR9; Drift Detector → FR10; Export Module → FR11; GitHub Integration Service → FR13.</div>
+      </div>
+      <div class="fix-row">
+        <div class="fix-tag">Methods</div>
+        <div class="fix-body">Renamed to match real exports: <span class="was">detectDrift()</span> → <b>checkDrift()</b> — result is the three-state <code>current / implementation_changed / signature_changed</code> your report describes, not a boolean. Rollback (FR9) is implemented by re-invoking <b>saveDocVersion()</b> with a new version rather than deleting history, which is why "without losing later history" in FR9 is accurate.</div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Verified against <code>server/src/models</code>, <code>server/src/services</code>, <code>server/src/controllers</code> and <code>server/src/lib</code> on 2026‑07‑19. If Section 3.4's prose changes, update the class names here to match — the two should always read as one vocabulary.
+  </footer>
+</main>

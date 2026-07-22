@@ -74,14 +74,14 @@ export function Projects() {
       ) : (
         <div className="doc-grid fade-up">
           {data.map((p) => (
-            <Card key={p.projectId} className="doc-card" style={{ cursor: 'default' }}>
+            <Card key={p.projectId} hover className="doc-card" onClick={() => navigate(`/projects/${p.projectId}`)}>
               <div className="row row--between">
-                <button className="row" style={{ gap: 'var(--sp-2)', background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'inherit', minWidth: 0 }} onClick={() => navigate(`/projects/${p.projectId}`)}>
+                <div className="row" style={{ gap: 'var(--sp-2)', minWidth: 0 }}>
                   <FolderGit2 size={16} style={{ color: 'var(--signal)' }} />
                   <span className="doc-card__title truncate">{p.projectName}</span>
-                </button>
+                </div>
                 {p.role === 'owner' && (
-                  <button className="iconbtn" style={{ width: 28, height: 28 }} aria-label={`Delete ${p.projectName}`} onClick={() => setTarget(p)}>
+                  <button className="iconbtn" style={{ width: 28, height: 28 }} aria-label={`Delete ${p.projectName}`} onClick={(e) => { e.stopPropagation(); setTarget(p); }}>
                     <Trash2 size={15} />
                   </button>
                 )}
